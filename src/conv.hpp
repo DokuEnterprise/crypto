@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONV_H
+#define CONV_H
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,3 +34,5 @@ public:
     void binary_number_to_doubles_fp2(const char* x);
 private:
 };
+
+#endif

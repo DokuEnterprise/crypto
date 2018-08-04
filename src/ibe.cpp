@@ -4,6 +4,8 @@
 Int twist_order, twist_cofactor;
 fp2e_t twistB;
 
+using namespace utils;
+
 MasterKey::MasterKey(){
 	// twist_order = n(np-n)
 	this->twist_order = p * 2;
@@ -21,34 +23,35 @@ MasterKey::MasterKey(){
 }
 
 void MasterKey::setup(){
-     curvepoint_fp_t d;
+	using namespace boost::multiprecision;
+	using namespace boost::random;
 
-    gmp_randstate_t state;
-	gmp_randinit_default(state);
-	unsigned long int seed;
-	seed = (unsigned long int)time(NULL);
-	gmp_randseed_ui(state, seed);
+	curvepoint_fp_t p;
 
-	mpz_t scalar;
-	mpz_init(scalar);
+	mt19937 mt;
+    uniform_int_distribution<cpp_int> ui(0, order);
 	
-	do
-		mpz_urandomm(scalar, state, p);
-	while(!mpz_cmp_ui(scalar, 0));
+	auto secret = ui(mt);
+	auto x = cpp_int_to_scalar(secret, order);
+	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
 
-	curvepoint_fp_mul(d, curve_gen, scalar);
-
-	mpz_clear(scalar);
-	gmp_randclear(state);
-
-    // Got random point
-    curvepoint_fp_print(stdout, d);
-    this->private_key.s = &scalar;
-	this->public_key.g1 = &d;
+    this->private_key.s = secret;
+	this->public_key.g1 = &p;
 }
 
 void MasterKey::extract(std::string id){
+	twistpoint_fp2_t d, q;
+	hash_to_point(id, q);
+	cpp_int tmp = this->private_key.s;
+	auto x = cpp_int_to_scalar(tmp, twist_order);
+	twistpoint_fp2_scalarmult_vartime(d, q, &x);
 
+	this->id_private_key.d = &d;
+	this->id_private_key.q = &q;
+}
+
+void hash_to_point(std::string m, twistpoint_fp2_t& pt){
+	hash_to_twist_subgroup(m, pt);
 }
 
 // Fix this: bit_cast may not be a correct conversion
@@ -56,8 +59,8 @@ void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt){
 	using boost::numeric_cast;
 
 	hashtotwistpoint(m, pt);
-	scalar_t c {bit_cast<scalar_t>(twist_cofactor)};
-	twistpoint_fp2_scalarmult_vartime(pt,pt, c);
+	auto x = cpp_int_to_scalar(twist_cofactor, twist_order);
+	twistpoint_fp2_scalarmult_vartime(pt,pt, &x);
 }
 
 void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
@@ -80,7 +83,7 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
 		fp2e_mul(xxx, xxx, x);
 
 		fp2e_add(t,xxx, twistB);
-		int y = fp2e_sqrt(sqr, t);
+		int y = utils::fp2e_sqrt(sqr, t);
 		if(y != 0){
 			twistpoint_fp2_t pt;
 			Set_xy_twistpoint(pt,x,sqr);

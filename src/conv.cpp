@@ -1,5 +1,5 @@
 #include "conv.hpp"
-
+using namespace utils;
 // bytesToDoubles converts a binary, 
 // big-endian number into 12 doubles that are
 // in dclxvi's scalar format.
