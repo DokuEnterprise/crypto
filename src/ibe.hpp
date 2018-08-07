@@ -1,11 +1,12 @@
 #ifndef IBE_H
 #define IBE_H
 
-#include <dclxvi/curvepoint_fp.h>
-#include <dclxvi/twistpoint_fp2.h>
-#include <dclxvi/fp2e.h>
-#include <dclxvi/fp12e.h>
-#include <dclxvi/cpucycles.h>
+extern "C"{
+    #include <dclxvi/curvepoint_fp.h>
+    #include <dclxvi/twistpoint_fp2.h>
+    #include <dclxvi/fp2e.h>
+    #include <dclxvi/fp12e.h>
+}
 
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -30,16 +31,13 @@
 //namespace mp = boost::multiprecision; 
 //namespace rd = boost::random;
 
-curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}},
-                                             {{{-2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}},
-                                             {{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}},
-{{{0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
+extern curvepoint_fp_t bn_curvegen;
 
-Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
+extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
 
-typedef curvepoint_fp_t bn256_cp;
+typedef curvepoint_fp_t dclxvi_cp;
 typedef twistpoint_fp2_t twis;
 
 
@@ -52,7 +50,7 @@ struct g1 {
 };
 
 struct MasterPublicKey{
-    bn256_cp *g1;
+    dclxvi_cp *g1;
 };
 
 struct MasterPrivateKey{
@@ -72,7 +70,6 @@ class MasterKey
 {
 public:
     MasterKey();
-    ~MasterKey();
     void setup();
     void extract(std::string id);
     mpriv private_key;
