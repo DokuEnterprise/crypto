@@ -1,5 +1,5 @@
 CC = g++ # C compiler
-CFLAGS = -fPIC -Wall -Wextra -O2 -g # C flags
+CFLAGS = -fPIC -std=c++17 -Wall -Wextra -O2 -g # C flags
 LDFLAGS = -lssl -lcrypto -shared  # linking flags
 RM = rm -f  # rm command
 TARGET_LIB = libdems.so # target lib

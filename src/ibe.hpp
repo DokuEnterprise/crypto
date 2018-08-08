@@ -23,7 +23,10 @@ extern "C"{
 #include <gmp.h>
 #include <string>
 #include <functional>
+#include <array>
+#include <vector>
 #include <algorithm>
+#include <iterator>
 #include <time.h>
 #include "conv.hpp"
 #include "utils.hpp"

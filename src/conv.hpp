@@ -1,6 +1,13 @@
 #ifndef CONV_H
 #define CONV_H
 
+#include <array>
+#include <memory>
+#include <type_traits>
+#include <iostream>
+#include <iomanip>
+
+
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/integer.hpp>
@@ -11,6 +18,7 @@
 
 // Conversion tools for IBE.
 
+using byte = unsigned char;
 using Int = boost::multiprecision::cpp_int;
 using big_int = boost::multiprecision::int512_t;
 
@@ -34,5 +42,31 @@ public:
     void binary_number_to_doubles_fp2(const char* x);
 private:
 };
+
+unsigned long long buff_to_integer(const char * buffer);
+
+template<class T> 
+std::array<byte, sizeof(T)>  to_bytes(const T& object)
+{
+    std::array<byte, sizeof(T)> bytes;
+
+    auto begin = reinterpret_cast<const byte*>(std::addressof(object));
+    auto end = begin + sizeof(T);
+    std::copy(begin, end, std::begin(bytes));
+
+    return bytes;
+}
+
+template<class T>
+T& from_bytes(const std::array<byte,sizeof(T)>& bytes, T& object)
+{
+    // For reference http://en.cppreference.com/w/cpp/types/is_trivially_copyable
+    static_assert(std::is_trivially_copyable<T>::value, "not a TriviallyCopyable type");
+
+    byte* begin_object = reinterpret_cast<byte*>(std::addressof(object));
+    std::copy(std::begin(bytes), std::end(bytes), begin_object);
+
+    return object;
+}
 
 #endif

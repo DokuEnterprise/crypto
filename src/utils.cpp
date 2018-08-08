@@ -143,10 +143,3 @@ namespace utils{
 
 }
 
-// Bitcast
-template <class Dest, class Source>
-inline Dest bit_cast(const Source & source){
-    Dest dest;
-    memcpy( & dest, & source, sizeof(dest));
-    return dest;
-}

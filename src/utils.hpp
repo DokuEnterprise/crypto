@@ -6,6 +6,7 @@
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <asm/errno.h>
+#include <type_traits>
 #include <string.h>
 #include <climits>
 
@@ -65,7 +66,4 @@ namespace utils{
 
 }
 
-// Bitcast
-template <class Dest, class Source>
-inline Dest bit_cast(const Source & source);
 #endif

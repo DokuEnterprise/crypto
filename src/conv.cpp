@@ -14,10 +14,12 @@ const int NUM_BYTES = 32;
 // bytesToDoubles converts a binary, 
 // big-endian number into 12 doubles that are
 // in dclxvi's scalar format.
+// TODO: check if my convesion works on line 21
 void convert_context::binary_number_to_doubles(const char * m){
     using boost::numeric_cast;
 
-    big_int x = bit_cast<big_int>(m);
+    unsigned long long tmp = buff_to_integer(m);
+    big_int x = numeric_cast<big_int>(tmp);
 
     this->acc = x;
 
@@ -64,4 +66,15 @@ void convert_context::binary_number_to_doubles_fp2(const char* x){
     for(auto i = 0; i < 12; ++i){
         this->doublesFP2[2*i] = this->doubles[i];
     }
+}
+
+unsigned long long buff_to_integer(const char * buffer)
+{
+    unsigned long long a;
+    int byte = (strlen(buffer) - 1) * 8;
+    for(int i = 0; i < strlen(buffer); ++i){
+        a |= static_cast<unsigned long long>(buffer[i]) << byte;
+        byte -= 8;
+    }
+    return a;
 }
