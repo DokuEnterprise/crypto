@@ -1,4 +1,4 @@
 language: cpp
 compiler: g++
 script: git clone https://github.com/DokuEnterprise/dclxvi && cd dclxvi && make && make install &&
-sudo apt-get install g++ && sudo apt-get install gcc && cd crypto/src && make
+sudo apt-get install g++ && sudo apt-get install gcc && cd ../ && cd src && make
