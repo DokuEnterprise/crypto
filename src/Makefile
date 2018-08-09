@@ -1,23 +1,25 @@
-CC = g++ # C compiler
-CFLAGS = -fPIC -std=c++17 -Wall -Wextra -O2 -g # C flags
-LDFLAGS = -lssl -lcrypto -shared  # linking flags
-RM = rm -f  # rm command
-TARGET_LIB = libdems.so # target lib
+CC = g++
 
-SRCS = utils.cpp ibe.cpp conv.cpp # source files
-OBJS = $(SRCS:.cpp=.o)
+CPPFLAGS= -O3 -fomit-frame-pointer -fPIC -DQHASM
+LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl
 
-.PHONY: all
-all: ${TARGET_LIB}
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+TEST_FLAGS = -L$(ROOT_DIR) -I$(ROOT_DIR) -ldems -ldclxvi -lcrypto -lssl
 
-$(TARGET_LIB): $(OBJS)
-	$(CC) ${LDFLAGS} -o $@ $^
+SOURCES = $(shell echo *.cpp)
+HEADERS = $(shell echo *.h)
+OBJECTS=$(SOURCES:.cpp=.o)
 
-$(SRCS:.cpp=.d):%.d:%.cpp
-	$(CC) $(CFLAGS) -MM $< >$@
+TARGET=libdems.so
 
-include $(SRCS:.cpp=.d)
+all: $(TARGET) testfiles
 
-.PHONY: clean
+.PHONY : clean
 clean:
-	-${RM} ${TARGET_LIB} ${OBJS} $(SRCS:.cpp=.d)
+	rm -f $(OBJECTS) test.o $(TARGET)
+
+$(TARGET) : $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
+
+testfiles:
+	$(CC) test/test.cpp $(TEST_FLAGS) -o test.o
