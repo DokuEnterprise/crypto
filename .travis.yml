@@ -1,3 +1,4 @@
 language: cpp
 compiler: g++
-script: sudo apt-get install g++ && sudo apt-get install gcc && make
+script: git clone https://github.com/DokuEnterprise/dclxvi && cd dclxvi && make && make install &&
+sudo apt-get install g++ && sudo apt-get install gcc && cd ../ && cd src && make
