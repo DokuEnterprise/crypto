@@ -23,3 +23,7 @@ $(TARGET) : $(OBJECTS)
 
 testfiles:
 	$(CC) test/test.cpp $(TEST_FLAGS) -o test.o
+
+install:
+	cp $(HEADERS) /usr/local/include/dems
+	cp libdems.so /usr/local/lib

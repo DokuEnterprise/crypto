@@ -139,7 +139,5 @@ namespace utils{
             const unsigned long long > ( * ( & words[0]));
         return tmp;
     }
-    // Extra functions needed for crypto
-
 }
 

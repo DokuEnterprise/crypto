@@ -29,6 +29,7 @@ extern "C"{
 #include <iterator>
 #include <time.h>
 #include "conv.hpp"
+#include "encdec.hpp"
 #include "utils.hpp"
 
 //namespace mp = boost::multiprecision; 
@@ -44,16 +45,16 @@ typedef curvepoint_fp_t dclxvi_cp;
 typedef twistpoint_fp2_t twis;
 
 
-struct g2 {
+struct g2{
 	twistpoint_fp2_t p;
 };
 
-struct g1 {
+struct g1{
 	curvepoint_fp_t p;
 };
 
 struct MasterPublicKey{
-    dclxvi_cp *g1;
+    dclxvi_cp g1;
 };
 
 struct MasterPrivateKey{
@@ -69,12 +70,13 @@ typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
 typedef struct IdentityPrivateKey idpk;
 
-class MasterKey
+class Ibe
 {
 public:
-    MasterKey();
+    Ibe();
     void setup();
     void extract(std::string id);
+    void encrypt(std::string id, std::string msg);
     mpriv private_key;
     mpublic public_key; 
     idpk id_private_key;

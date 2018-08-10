@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(){
-    MasterKey d;
+    Ibe d;
     d.setup();
     d.extract("friedrichdoku");
     cout << "running" << endl;
