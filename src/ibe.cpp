@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <sodium/crypto_box.h>
+#include <fstream>
 #include "ibe.hpp"
+#include "json.hpp"
 
 using namespace utils;
 
@@ -61,6 +64,7 @@ void Ibe::extract(std::string id){
 void Ibe::encrypt(std::string id, std::string msg){
 	using namespace boost::multiprecision;
 	using namespace boost::random;
+	using namespace nlohmann;
 
 	twistpoint_fp2_t q;
 	hash_to_point(id, q);
@@ -78,5 +82,31 @@ void Ibe::encrypt(std::string id, std::string msg){
 	curvepoint_fp_scalarmult_vartime(rp, bn_curvegen, &x);
 
 	fp12e_t er;
+	fp12e_pow_vartime(er,g,&x);
 
+    //TODO: Create a data stream that holds hashed values of
+    // the points (q,rp, er) and stuff. Then read them into an array and 
+	// seal them using sodium secret box.
+	
+	const auto q_bytes = to_bytes(q);
+	const auto rp_bytes = to_bytes(rp);
+	const auto er_bytes = to_bytes(er);
+
+	// Depends you may need to write a special function to marshall each point
+	// this is a cheap version.
+	json q_array(q_bytes);
+	json rp_array(rp_bytes);
+	json er_array(er_bytes);
+
+	std::string xtt = q_array.dump() + rp_array.dump() + er_array.dump();
+	std::string sk;
+	xtt = sha256(xtt);
+
+	for(int i = 0; i < 32; ++i){
+		sk[i] = xtt[i];
+	}
+	// All thats left is the sk
+	// TODO: This may be very cheap and unsafe 
+	crypto_box_seal(nullptr, reinterpret_cast<const unsigned char*>(msg.c_str()),
+		 24, reinterpret_cast<const unsigned char*>(sk.c_str()));
 }

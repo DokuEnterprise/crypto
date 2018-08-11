@@ -1,10 +1,10 @@
 CC = g++
 
 CPPFLAGS= -O3 -fomit-frame-pointer -fPIC -DQHASM
-LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl
+LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl -lsodium
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-TEST_FLAGS = -L$(ROOT_DIR) -I$(ROOT_DIR) -ldems -ldclxvi -lcrypto -lssl
+TEST_FLAGS = -L$(ROOT_DIR) -I$(ROOT_DIR) -ldems -ldclxvi -lcrypto -lssl -lsodium
 
 SOURCES = $(shell echo *.cpp)
 HEADERS = $(shell echo *.h)
