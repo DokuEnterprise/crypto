@@ -52,8 +52,13 @@ void convert_context::binary_number_to_doubles_fp2(const char* x){
     std::string fs(x);
 
     //[:NUM_BYTES] and [NUM_BYTES:] in python
-    std::string p1 = fs.substr(0,NUM_BYTES);
-    std::string p2 = fs.substr(fs.size() - NUM_BYTES);
+    std::string p1, p2;
+    try{
+        p1 = fs.substr(0,NUM_BYTES);
+        p2 = fs.substr(fs.size() - NUM_BYTES);
+    }catch(std::exception e){
+        std::cerr << e.what() << std::endl;
+    }
 
     const char* p1C = p1.c_str();
     const char* p2C = p2.c_str();

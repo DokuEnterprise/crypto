@@ -50,11 +50,11 @@ struct g2{
 };
 
 struct g1{
-	curvepoint_fp_t p;
+	curvepoint_fp_t *p;
 };
 
 struct MasterPublicKey{
-    dclxvi_cp g1;
+    curvepoint_fp_t *g1;
 };
 
 struct MasterPrivateKey{
@@ -88,8 +88,8 @@ private:
 
 void Set_xy_twistpoint(twistpoint_fp2_t & rop, fp2e_t x, fp2e_t y);
 
-template<class Integer>
-void Set_xy_fp2e(Integer x, Integer y, fp2e_t& b);
+//template<class Integer>
+//void Set_xy_fp2e(Integer x, Integer y, fp2e_t& b);
 
 void hash_to_point(std::string m, twistpoint_fp2_t& pt);
 void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt);
