@@ -1,4 +1,11 @@
+# safelist
+branches:
+  only:
+  - master
+  - testing
 language: cpp
 compiler: g++
-script: git clone https://github.com/DokuEnterprise/dclxvi && cd dclxvi && make && make install &&
-sudo apt-get install g++ && sudo apt-get install gcc && cd ../ && cd src && make
+script: sudo apt-get install libboost-all-dev && sudo apt-get install libgmp3-dev && git clone https://github.com/DokuEnterprise/dclxvi && cd dclxvi && make && make install && cd ../ && wget
+https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz && tar -xzf libsodium* && rm libsodium-1.0.16.tar.gz && cd libsodium* &&
+./configure && make && make install
+

@@ -19,3 +19,4 @@ dclxvi-20130329
 src/.release_time
 src/build
 src/bin
+*.o
