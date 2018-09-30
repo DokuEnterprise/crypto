@@ -20,8 +20,9 @@ void convert_context::binary_number_to_doubles(const char * m){
 
     unsigned long long tmp = buff_to_integer(m);
     big_int x = numeric_cast<big_int>(tmp);
-
+    
     this->acc = x;
+
 
     this->v_power = big_six * v;
     this->acc = this->acc / this->v_power;

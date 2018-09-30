@@ -41,9 +41,6 @@ extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
 
-typedef curvepoint_fp_t dclxvi_cp;
-typedef twistpoint_fp2_t twis;
-
 
 struct g2{
 	twistpoint_fp2_t p;
@@ -54,7 +51,7 @@ struct g1{
 };
 
 struct MasterPublicKey{
-    dclxvi_cp g1;
+    curvepoint_fp_t g1;
 };
 
 struct MasterPrivateKey{
@@ -62,8 +59,8 @@ struct MasterPrivateKey{
 };
 
 struct IdentityPrivateKey{
-    twistpoint_fp2_t *d;
-    twistpoint_fp2_t *q;
+    twistpoint_fp2_t d;
+    twistpoint_fp2_t q;
 };
 
 typedef struct MasterPrivateKey mpriv;

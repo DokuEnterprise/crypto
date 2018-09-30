@@ -47,7 +47,7 @@ void Ibe::setup(){
 	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
 
     this->private_key.s = secret;
-	this->public_key.g1 = p;
+	memcpy(this->public_key.g1, p, sizeof(p));
 }
 
 void Ibe::extract(std::string id){
@@ -57,8 +57,8 @@ void Ibe::extract(std::string id){
 	auto x = cpp_int_to_scalar(tmp, twist_order);
 	twistpoint_fp2_scalarmult_vartime(d, q, &x);
 
-	this->id_private_key.d = &d;
-	this->id_private_key.q = &q;
+	memcpy(this->id_private_key.d, d, sizeof(d));
+	memcpy(this->id_private_key.q, q, sizeof(q));
 }
 
 void Ibe::encrypt(std::string id, std::string msg){
