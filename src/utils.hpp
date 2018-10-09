@@ -25,6 +25,7 @@ extern "C"{
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/integer.hpp>
+#include <boost/cerrno.hpp> 
 
 namespace utils{
 
