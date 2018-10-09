@@ -16,6 +16,7 @@ extern "C"{
 #include <boost/random/variate_generator.hpp>
 #include <boost/generator_iterator.hpp>
 
+#include <boost/cerrno.hpp> 
 #include <boost/random.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/lexical_cast.hpp>
