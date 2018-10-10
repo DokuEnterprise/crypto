@@ -25,9 +25,12 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
 
 	size_t xx = std::hash<std::string>{}(hxx);
 	size_t xy = std::hash<std::string>{}(hxy);
+	
+	Int boostx = numeric_cast<Int>(xx);
+	Int boosty = numeric_cast<Int>(xy);
 
 	fp2e_t x;
-	Set_xy_fp2e(xx, xy, x);
+	Set_xy_fp2e(boostx, boosty, x);
 
 	for(;;){
 		fp2e_t xxx, t, sqr;
@@ -46,19 +49,16 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
 	}
 }
 
-template<class Integer>
-void Set_xy_fp2e(Integer x, Integer y, fp2e_t& b){
+void Set_xy_fp2e(Int x, Int y, fp2e_t& b){
 	using namespace std;
 	using boost::numeric_cast;
 	convert_context c;
 
-	//if (!std::is_same<Integer, Int>::value){
-	Int xx = numeric_cast<Int>(x);
-	Int xy = numeric_cast<Int>(y);
-	//}
-
 	Int xxB = x % p;
 	Int xyB = y % p;
+
+	// May need to be changed
+	// https://stackoverflow.com/questions/50465041/how-to-convert-boostmultiprecisioncpp-int-tofrom-an-array-of-byte
 	const auto x_bytes = to_bytes(numeric_cast<double>(xxB));
 	const auto y_bytes = to_bytes(numeric_cast<double>(xyB));
 

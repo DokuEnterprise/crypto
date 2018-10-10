@@ -14,6 +14,9 @@ extern "C"{
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
+
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <boost/generator_iterator.hpp>
 
 #include <boost/cerrno.hpp> 
@@ -25,6 +28,9 @@ extern "C"{
 #include "conv.hpp"
 #include "utils.hpp"
 
+using boost::numeric_cast;
+
+using Int = boost::multiprecision::cpp_int;
 
 
 extern curvepoint_fp_t bn_curvegen;
@@ -37,7 +43,8 @@ void hash_to_point(std::string m, twistpoint_fp2_t& pt);
 void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt);
 void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt);
 
-template<class Integer> void Set_xy_fp2e(Integer x, Integer y, fp2e_t& b);
+void Set_xy_fp2e(Int x, Int y, fp2e_t& b);
+
 void Set_xy_twistpoint(twistpoint_fp2_t& rop, fp2e_t x, fp2e_t y);
 void pair(fp12e_t& result,curvepoint_fp_t c, twistpoint_fp2_t t);
 
