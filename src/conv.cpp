@@ -20,8 +20,9 @@ void convert_context::binary_number_to_doubles(const char * m){
 
     unsigned long long tmp = buff_to_integer(m);
     big_int x = numeric_cast<big_int>(tmp);
-
+    
     this->acc = x;
+
 
     this->v_power = big_six * v;
     this->acc = this->acc / this->v_power;
@@ -53,10 +54,11 @@ void convert_context::binary_number_to_doubles_fp2(const char* x){
 
     //[:NUM_BYTES] and [NUM_BYTES:] in python
     std::string p1, p2;
+  
     try{
         p1 = fs.substr(0,NUM_BYTES);
         p2 = fs.substr(fs.size() - NUM_BYTES);
-    }catch(std::exception e){
+    }catch(const std::exception& e){
         std::cerr << e.what() << std::endl;
     }
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sodium/crypto_box.h>
 #include <fstream>
+#include "vars.hpp"
 #include "ibe.hpp"
 #include "json.hpp"
 
@@ -13,23 +14,42 @@ curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0
 
 Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
 
-Int twist_order, twist_cofactor;
+// This needs to be cleaned up later
+Int compute_vars(bool t_order){
+	if(t_order){
+		Int temp_o;
+		temp_o = p * 2;
+		temp_o = temp_o - order;
+		temp_o = temp_o * order;
+		return temp_o;
+
+	}else{
+		Int temp_co;
+		temp_co = 2 * p;
+		temp_co = temp_co - order;
+		return temp_co;
+	}
+}
+
+Int twist_order = compute_vars(1), twist_cofactor = compute_vars(0);
+
+
 fp2e_t twistB;
 
 
 Ibe::Ibe(){
 	// twist_order = n(np-n)
-	this->twist_order = p * 2;
-	this->twist_order = twist_order - order;
-	this->twist_order = twist_order * order;
+	//this->twist_order = p * 2;
+	//this->twist_order = twist_order - order;
+	//this->twist_order = twist_order * order;
 
 	Set_xy_fp2e(SET1, SET2,this->twistB);
 
-	this->twist_cofactor = 2 * p;
-	this->twist_cofactor = this->twist_cofactor - order;
+	//this->twist_cofactor = 2 * p;
+	//this->twist_cofactor = this->twist_cofactor - order;
 
-	twist_order = this->twist_order;
-	twist_cofactor = this->twist_cofactor;
+	this->twist_order = twist_order;
+	this->twist_cofactor = twist_cofactor;
 	Set_xy_fp2e(SET1,SET2,twistB);
 }
 
@@ -46,19 +66,25 @@ void Ibe::setup(){
 	auto x = cpp_int_to_scalar(secret, order);
 	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
 
-    this->private_key.s = secret;
-	this->public_key.g1 = &p;
+  this->private_key.s = secret;
+	memcpy(this->public_key.g1, p, sizeof(p));
 }
+
 
 void Ibe::extract(std::string id){
 	twistpoint_fp2_t d, q;
+	// The hash to point function is getting the boost divide by zero error
+	assert(id != "");
+	std::cout << "EXTRACT: HASH TO POINT MODE" << std::endl;
 	hash_to_point(id, q);
+
 	cpp_int tmp = this->private_key.s;
-	auto x = cpp_int_to_scalar(tmp, twist_order);
+	std::cout << "EXTRACT CPP_INT_TO" << std::endl;
+	auto x = cpp_int_to_scalar(tmp, compute_vars(1));
 	twistpoint_fp2_scalarmult_vartime(d, q, &x);
 
-	this->id_private_key.d = &d;
-	this->id_private_key.q = &q;
+	memcpy(this->id_private_key.d, d, sizeof(d));
+	memcpy(this->id_private_key.q, q, sizeof(q));
 }
 
 void Ibe::encrypt(std::string id, std::string msg){
