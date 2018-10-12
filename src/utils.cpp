@@ -114,9 +114,13 @@ namespace utils{
         }
     }
 
+    // Divide by zero boost problem.
+    // This function needs to be fixed
+
     std::array < uint64_t, 4 > cppint_to_words(cpp_int k_in, cpp_int bound){
         cpp_int k;
         if (k_in.sign() < 0 || k_in.compare(bound) >= 0) {
+            // This is where the problem is k_in and bound are both 0 for some reason
             k = k_in % bound;
         } else {
             k = k_in;
@@ -134,9 +138,12 @@ namespace utils{
     }
 
     const unsigned long long cpp_int_to_scalar(cpp_int k_in, cpp_int bound){
+
+        std::cout << "cpp_int_to_scalar" << k_in << std::endl;
+        std::cout << "cpp_int_to_scalar" << bound << std::endl;
         auto words = cppint_to_words(k_in, bound);
         auto tmp = static_cast <
-            const unsigned long long > ( * ( & words[0]));
+        const unsigned long long > ( * ( & words[0]));
         return tmp;
     }
 }

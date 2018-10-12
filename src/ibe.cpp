@@ -50,9 +50,13 @@ void Ibe::setup(){
 	memcpy(this->public_key.g1, p, sizeof(p));
 }
 
+
 void Ibe::extract(std::string id){
 	twistpoint_fp2_t d, q;
+	// The hash to point function is getting the boost divide by zero error
+	assert(id != "");
 	hash_to_point(id, q);
+
 	cpp_int tmp = this->private_key.s;
 	auto x = cpp_int_to_scalar(tmp, twist_order);
 	twistpoint_fp2_scalarmult_vartime(d, q, &x);

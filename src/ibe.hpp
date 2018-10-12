@@ -29,6 +29,7 @@ extern "C"{
 #include <algorithm>
 #include <iterator>
 #include <time.h>
+#include <assert.h>  
 #include "conv.hpp"
 #include "encdec.hpp"
 #include "utils.hpp"
