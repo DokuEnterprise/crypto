@@ -66,7 +66,7 @@ void Ibe::setup(){
 	auto x = cpp_int_to_scalar(secret, order);
 	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
 
-    this->private_key.s = secret;
+  this->private_key.s = secret;
 	memcpy(this->public_key.g1, p, sizeof(p));
 }
 
@@ -96,7 +96,7 @@ void Ibe::encrypt(std::string id, std::string msg){
 	hash_to_point(id, q);
 
 	fp12e_t g;
-	pair(g, this->public_key.g1, q);
+	pair(g, this->public_key.g1[1], q);
 
 	mt19937 mt;
     uniform_int_distribution<cpp_int> ui(0, order);

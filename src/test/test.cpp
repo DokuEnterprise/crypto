@@ -3,6 +3,7 @@
 
 using namespace std;
 
+//g++ test.cpp -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system
 int main(){
     Ibe d;
     d.setup();

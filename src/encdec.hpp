@@ -43,6 +43,7 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt);
 
 void Set_xy_fp2e(Int x, Int y, fp2e_t& b);
 
+
 void Set_xy_twistpoint(twistpoint_fp2_t& rop, fp2e_t x, fp2e_t y);
 void pair(fp12e_t& result,curvepoint_fp_t c, twistpoint_fp2_t t);
 

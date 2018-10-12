@@ -49,7 +49,7 @@ struct g2{
 };
 
 struct g1{
-	curvepoint_fp_t p;
+	curvepoint_fp_t *p;
 };
 
 struct MasterPublicKey{
