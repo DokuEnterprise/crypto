@@ -138,7 +138,6 @@ namespace utils{
     }
 
     const unsigned long long cpp_int_to_scalar(cpp_int k_in, cpp_int bound){
-
         std::cout << "cpp_int_to_scalar" << k_in << std::endl;
         std::cout << "cpp_int_to_scalar" << bound << std::endl;
         auto words = cppint_to_words(k_in, bound);

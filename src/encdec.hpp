@@ -35,8 +35,6 @@ using Int = boost::multiprecision::cpp_int;
 
 extern curvepoint_fp_t bn_curvegen;
 extern Int order;
-extern Int twist_order;
-extern Int twist_cofactor;
 extern fp2e_t twistB;
 
 void hash_to_point(std::string m, twistpoint_fp2_t& pt);

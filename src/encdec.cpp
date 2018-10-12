@@ -1,4 +1,5 @@
 #include "encdec.hpp"
+#include "vars.hpp"
 
 void hash_to_point(std::string m, twistpoint_fp2_t& pt){
 	hash_to_twist_subgroup(m, pt);
@@ -6,13 +7,13 @@ void hash_to_point(std::string m, twistpoint_fp2_t& pt){
 
 // Twist cofactor and twist order are undefined this needs to be
 // fixed.
-twist_cofactor = p * 2;
 void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt){
 	
 	using boost::numeric_cast;
     using namespace utils;
 
 	hashtotwistpoint(m, pt);
+	Int t_co = p * 2;
 	std::cout << "hash_to_twist_subgroup " << twist_cofactor << std::endl;
 	std::cout << "hash_to_twist_subgroup " << twist_order << std::endl; 
 	auto x = cpp_int_to_scalar(twist_cofactor, twist_order);
