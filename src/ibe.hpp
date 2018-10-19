@@ -21,10 +21,14 @@ extern "C"{
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/integer.hpp>
 
+#include <sodium/crypto_secretbox.h>
+#include <sodium/randombytes.h>
+
 #include <gmp.h>
 #include <string>
 #include <functional>
 #include <array>
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <iterator>
@@ -37,20 +41,14 @@ extern "C"{
 //namespace mp = boost::multiprecision; 
 //namespace rd = boost::random;
 
+// Needed for sodium
+#define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES)
+
 extern curvepoint_fp_t bn_curvegen;
 
 extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
-
-
-struct g2{
-	twistpoint_fp2_t p;
-};
-
-struct g1{
-	curvepoint_fp_t p;
-};
 
 struct MasterPublicKey{
     curvepoint_fp_t g1;
@@ -64,7 +62,14 @@ struct IdentityPrivateKey{
     twistpoint_fp2_t d;
     twistpoint_fp2_t q;
 };
-
+ 
+struct cipherdata{
+    curvepoint_fp_t rp;
+    size_t messagelen;
+    size_t cyrptolen;
+    unsigned char ciphertext[];
+    unsigned char nonce[];
+};
 typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
 typedef struct IdentityPrivateKey idpk;
@@ -75,7 +80,8 @@ public:
     Ibe();
     void setup();
     void extract(std::string id);
-    void encrypt(std::string id, std::string msg);
+    cipherdata encrypt(std::string id, std::string msg);
+    void decrypt(idpk *p, cipherdata data);
     mpriv private_key;
     mpublic public_key; 
     idpk id_private_key;

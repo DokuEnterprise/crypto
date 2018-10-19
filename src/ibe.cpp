@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <sodium/crypto_box.h>
 #include <fstream>
 #include "vars.hpp"
 #include "ibe.hpp"
@@ -87,7 +86,7 @@ void Ibe::extract(std::string id){
 	memcpy(this->id_private_key.q, q, sizeof(q));
 }
 
-void Ibe::encrypt(std::string id, std::string msg){
+cipherdata Ibe::encrypt(std::string id, std::string msg){
 	using namespace boost::multiprecision;
 	using namespace boost::random;
 	using namespace nlohmann;
@@ -126,13 +125,62 @@ void Ibe::encrypt(std::string id, std::string msg){
 
 	std::string xtt = q_array.dump() + rp_array.dump() + er_array.dump();
 	std::string sk;
-	xtt = sha256(xtt);
+	sk = sha256(xtt);
 
-	for(int i = 0; i < 32; ++i){
+	/*for(int i = 0; i < 32; ++i){
 		sk[i] = xtt[i];
-	}
+	}*/
 	// All thats left is the sk
 	// TODO: This may be very cheap and unsafe 
-	crypto_box_seal(nullptr, reinterpret_cast<const unsigned char*>(msg.c_str()),
-		 24, reinterpret_cast<const unsigned char*>(sk.c_str()));
+	unsigned char key[crypto_secretbox_KEYBYTES];
+	crypto_secretbox_keygen(key);
+	std::cout << "KEY" <<  key << std::endl;
+
+	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
+	unsigned char nonce[crypto_secretbox_NONCEBYTES];
+	randombytes_buf(nonce, sizeof(nonce));
+
+	unsigned char ciphertext[CIPHERTEXT_LEN + msg.length()];
+	crypto_secretbox_easy(ciphertext, reinterpret_cast<const unsigned char*>(msg.c_str()),
+		 msg.length(),nonce, reinterpret_cast<const unsigned char*>("D�(j��*Ἦ9��  �wzeW}�;�]��ں Ֆ"));
+
+	//std::cout << "THIS IS cipher " << cipher << std::endl;
+	cipherdata d;
+	memcpy(d.rp, rp, sizeof(rp));
+	memcpy(d.ciphertext, ciphertext, sizeof(ciphertext));
+	memcpy(d.nonce, nonce, sizeof(nonce));
+	d.messagelen = msg.length();
+	d.cyrptolen = CIPHERTEXT_LEN + msg.length();
+	
+	return d;
+}
+
+void Ibe::decrypt(idpk *p, cipherdata data){
+	std::cout << "DECRYPTING" << std::endl;
+	using namespace nlohmann;
+	fp12e_t point;
+	// rp should be equal to curvepoint
+	pair(point, data.rp, p->d);
+
+
+	const auto b1 = to_bytes(p->q);
+	const auto b2 = to_bytes(data.rp);
+	const auto b3 = to_bytes(point);
+
+	// Depends you may need to write a special function to marshall each point
+	// this is a cheap version.
+	json a1(b1);
+	json a2(b2);
+	json a3(b3);
+
+	std::string xtt = a1.dump() + a2.dump() + a3.dump();
+	std::string sk = sha256(xtt);
+
+	unsigned char de[data.messagelen];
+	if(crypto_secretbox_open_easy(de, reinterpret_cast<const unsigned char*>(data.ciphertext),
+			data.cyrptolen, data.nonce, reinterpret_cast<const unsigned char*>("D�(j��*Ἦ9��  �wzeW}�;�]��ں Ֆ")) != 0){
+		std::cout << "MESSAGE FORGERD" << std::endl;
+
+	}
+	std::cout << "DECRYPTED: " << de << std::endl;
 }
