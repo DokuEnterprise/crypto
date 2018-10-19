@@ -50,6 +50,18 @@ extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
 
+<<<<<<< HEAD
+=======
+
+struct g2{
+	twistpoint_fp2_t p;
+};
+
+struct g1{
+	curvepoint_fp_t *p;
+};
+
+>>>>>>> 57ab4a55645fd2c6db2ad5f3d70b2b3253dc6024
 struct MasterPublicKey{
     curvepoint_fp_t g1;
 };

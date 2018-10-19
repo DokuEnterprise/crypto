@@ -57,6 +57,7 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
 	}
 }
 
+
 void Set_xy_fp2e(Int x, Int y, fp2e_t& b){
 	using namespace std;
 	using boost::numeric_cast;
