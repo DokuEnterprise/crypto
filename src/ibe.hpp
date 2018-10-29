@@ -26,6 +26,7 @@ extern "C"{
 
 #include <gmp.h>
 #include <string>
+#include <cstdio>
 #include <functional>
 #include <array>
 #include <iostream>
@@ -50,18 +51,6 @@ extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
 
-<<<<<<< HEAD
-=======
-
-struct g2{
-	twistpoint_fp2_t p;
-};
-
-struct g1{
-	curvepoint_fp_t *p;
-};
-
->>>>>>> 57ab4a55645fd2c6db2ad5f3d70b2b3253dc6024
 struct MasterPublicKey{
     curvepoint_fp_t g1;
 };
@@ -79,8 +68,10 @@ struct cipherdata{
     curvepoint_fp_t rp;
     size_t messagelen;
     size_t cyrptolen;
-    unsigned char ciphertext[];
-    unsigned char nonce[];
+    // May not work with all compilers: the size 
+    // of the struct must be know at compile time for some compilers
+    unsigned char* nonce;
+    unsigned char* ciphertext;
 };
 typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
@@ -92,6 +83,7 @@ public:
     Ibe();
     void setup();
     void extract(std::string id);
+    bool test();
     cipherdata encrypt(std::string id, std::string msg);
     void decrypt(idpk *p, cipherdata data);
     mpriv private_key;
@@ -101,6 +93,7 @@ public:
     Int twist_cofactor;
 private:
     Int twist_order;
+    unsigned char key[crypto_secretbox_KEYBYTES];
 };
 
 void Set_xy_twistpoint(twistpoint_fp2_t & rop, fp2e_t x, fp2e_t y);

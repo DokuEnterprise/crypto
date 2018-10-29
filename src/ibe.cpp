@@ -1,3 +1,7 @@
+#define MESSAGE ((const unsigned char *) "friedrich")
+#define MESSAGE_LEN 9
+#define CIPHERTEXT_LEND (crypto_secretbox_MACBYTES + MESSAGE_LEN)
+
 #include <stdio.h>
 #include <fstream>
 #include "vars.hpp"
@@ -65,7 +69,7 @@ void Ibe::setup(){
 	auto x = cpp_int_to_scalar(secret, order);
 	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
 
-  this->private_key.s = secret;
+    this->private_key.s = secret;
 	memcpy(this->public_key.g1, p, sizeof(p));
 }
 
@@ -86,6 +90,22 @@ void Ibe::extract(std::string id){
 	memcpy(this->id_private_key.q, q, sizeof(q));
 }
 
+bool Ibe::test(){
+	std::string msg = "powercat";
+	unsigned char key[crypto_secretbox_KEYBYTES];
+	unsigned char nonce[crypto_secretbox_NONCEBYTES];
+	unsigned char ciphertext[CIPHERTEXT_LEND];
+
+	crypto_secretbox_keygen(key);
+	randombytes_buf(nonce, sizeof nonce);
+	crypto_secretbox_easy(ciphertext, reinterpret_cast<const unsigned char*>(msg.c_str()), msg.length(), NULL, key);
+
+	unsigned char decrypted[MESSAGE_LEN];
+	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEND, NULL, key) == 0) {
+		return true;
+	}
+}
+
 cipherdata Ibe::encrypt(std::string id, std::string msg){
 	using namespace boost::multiprecision;
 	using namespace boost::random;
@@ -95,7 +115,7 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	hash_to_point(id, q);
 
 	fp12e_t g;
-	pair(g, this->public_key.g1[1], q);
+	pair(g, this->public_key.g1, q);
 
 	mt19937 mt;
     uniform_int_distribution<cpp_int> ui(0, order);
@@ -132,25 +152,29 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	}*/
 	// All thats left is the sk
 	// TODO: This may be very cheap and unsafe 
-	unsigned char key[crypto_secretbox_KEYBYTES];
-	crypto_secretbox_keygen(key);
-	std::cout << "KEY" <<  key << std::endl;
+	
+	crypto_secretbox_keygen(this->key);
+	std::cout << "KEY" <<  this->key << std::endl;
 
 	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
-	unsigned char nonce[crypto_secretbox_NONCEBYTES];
-	randombytes_buf(nonce, sizeof(nonce));
+	struct cipherdata d;
+	d.ciphertext = (unsigned char*) calloc(CIPHERTEXT_LEN + msg.length(), sizeof(unsigned char));
+	d.nonce = (unsigned char*) calloc(crypto_secretbox_NONCEBYTES, sizeof(unsigned char));
+	d.cyrptolen = CIPHERTEXT_LEN + msg.length();
+	d.messagelen = msg.length();
 
-	unsigned char ciphertext[CIPHERTEXT_LEN + msg.length()];
-	crypto_secretbox_easy(ciphertext, reinterpret_cast<const unsigned char*>(msg.c_str()),
-		 msg.length(),nonce, reinterpret_cast<const unsigned char*>("D�(j��*Ἦ9��  �wzeW}�;�]��ں Ֆ"));
+	randombytes_buf(d.nonce, sizeof(d.nonce));
+
+	crypto_secretbox_easy(d.ciphertext, reinterpret_cast<const unsigned char*>(msg.c_str()),
+		 d.messagelen,d.nonce, this->key);
 
 	//std::cout << "THIS IS cipher " << cipher << std::endl;
-	cipherdata d;
+
+	std::copy(std::begin(rp), std::end(rp), std::begin(d.rp));
 	memcpy(d.rp, rp, sizeof(rp));
-	memcpy(d.ciphertext, ciphertext, sizeof(ciphertext));
-	memcpy(d.nonce, nonce, sizeof(nonce));
-	d.messagelen = msg.length();
-	d.cyrptolen = CIPHERTEXT_LEN + msg.length();
+
+	std::cout << "NONCE E: " << d.nonce << std::endl;
+	std::cout << "CIPHERTEXT E:" << d.ciphertext << std::endl;
 	
 	return d;
 }
@@ -175,12 +199,16 @@ void Ibe::decrypt(idpk *p, cipherdata data){
 
 	std::string xtt = a1.dump() + a2.dump() + a3.dump();
 	std::string sk = sha256(xtt);
+	std::cout << sk << std::endl;
 
 	unsigned char de[data.messagelen];
-	if(crypto_secretbox_open_easy(de, reinterpret_cast<const unsigned char*>(data.ciphertext),
-			data.cyrptolen, data.nonce, reinterpret_cast<const unsigned char*>("D�(j��*Ἦ9��  �wzeW}�;�]��ں Ֆ")) != 0){
+	if(crypto_secretbox_open_easy(de, data.ciphertext, data.cyrptolen, data.nonce, this->key) != 0){
 		std::cout << "MESSAGE FORGERD" << std::endl;
 
+	}else{
+		std::cout << "DECRYPTED: " << de << std::endl;
 	}
-	std::cout << "DECRYPTED: " << de << std::endl;
+
+	std::cout << "NONCE D: " << data.nonce << std::endl;
+	std::cout << "CIPHERTEXT D:" << data.ciphertext << std::endl;
 }

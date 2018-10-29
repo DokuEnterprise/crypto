@@ -17,7 +17,6 @@ int main(){
     cout << d.private_key.s << endl;
     cout << "PRIVATE KEY PASSED" << endl;
 
-    unsigned char c[CIPHERTEXT_LEN + 5];
     struct cipherdata x = d.encrypt("friedrichdoku", "hello");
     cout << "CIPHER " << x.ciphertext << endl;
     
