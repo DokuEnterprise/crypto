@@ -146,6 +146,7 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	std::string xtt = q_array.dump() + rp_array.dump() + er_array.dump();
 	std::string sk;
 	sk = sha256(xtt);
+	std::cout << "THIS IS THE ENC SECRET " << sk << std::endl;
 
 	/*for(int i = 0; i < 32; ++i){
 		sk[i] = xtt[i];
@@ -158,10 +159,10 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
 	struct cipherdata d;
-	d.ciphertext = (unsigned char*) calloc(CIPHERTEXT_LEN + msg.length(), sizeof(unsigned char));
+	d.ciphertext = (unsigned char*) calloc(CIPHERTEXT_LEN + msg.length() +1, sizeof(unsigned char));
 	d.nonce = (unsigned char*) calloc(crypto_secretbox_NONCEBYTES, sizeof(unsigned char));
-	d.cyrptolen = CIPHERTEXT_LEN + msg.length();
-	d.messagelen = msg.length();
+	d.cyrptolen = CIPHERTEXT_LEN + msg.length()+1;
+	d.messagelen = msg.length()+1;
 
 	randombytes_buf(d.nonce, sizeof(d.nonce));
 
@@ -199,7 +200,7 @@ void Ibe::decrypt(idpk *p, cipherdata data){
 
 	std::string xtt = a1.dump() + a2.dump() + a3.dump();
 	std::string sk = sha256(xtt);
-	std::cout << sk << std::endl;
+	std::cout << "THIS IS THE DEC SECRET " << sk << std::endl;
 
 	unsigned char de[data.messagelen];
 	if(crypto_secretbox_open_easy(de, data.ciphertext, data.cyrptolen, data.nonce, this->key) != 0){
