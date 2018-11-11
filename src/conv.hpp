@@ -41,6 +41,8 @@ public:
     double doublesFP2[24];
     void binary_number_to_doubles(const char * m);
     void binary_number_to_doubles_fp2(const char* x);
+    Int doubles_to_int(Int out, double limbsIn);
+    Int doubles_fp2_to_int(Int out, double limbsIn, int phase);
 private:
 };
 

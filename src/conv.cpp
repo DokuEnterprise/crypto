@@ -46,6 +46,48 @@ void convert_context::binary_number_to_doubles(const char * m){
     this->doubles[11] = numeric_cast<double>(this->acc);
 }
 
+// doublesToInt sets out to a value decoded from 12 doubles in dclxvi's format.
+// dclxvi stores values as described in [1], section 4.1.
+Int convert_context::doubles_to_int(Int out, double limbsIn){
+    using boost::numeric_cast;
+
+    auto limbs = (double[12]*) &limbsIn;
+    out = numeric_cast<int64_t>(limbs[0]);
+
+    this->v_power = 1868033;
+    this->tmp = numeric_cast<int64_t>(limbs[1] * 6)
+    this->tmp = this->tmp * this->v_power;
+    out = out + this->tmp;
+
+    int i = 2;
+    for(int64_t factor = 6; factor <= 36; factor *=6){
+        for(int j = 0; i < 5; ++j){
+            this->v_power = this->v_power * 1868033;
+            this->tmp = numeric_cast<int64_t>(limbs[i]) * factor;
+            this->tmp = this->tmp * this->v_power;
+            out = out + this->tmp;
+            i++;
+        }
+    }
+    out = out % p;
+    return out;
+}
+
+// doublesFP2ToInt set out to a value decoded from 24 doubles in dclxvi's F(p²)
+// format. dclxvi stores these values as pairs of the scalars where those
+// scalars are in the form described in [1], section 4.1. The words of the two
+// values are interleaved and phase (which must be either 0 or 1) determines
+// which of the two values is decoded.
+Int convert_context::doubles_fp2_to_int(Int out, double limbsIn, int phase){
+    auto limb2 = (double[24]*) &limbsIn;
+    double limbs[12];
+
+    for(int i = 0; i < 12; ++i){
+        limbs[i] = limb2[2*i+phase];
+    }
+    return this->doubles_to_int(out, &limbs[0]);
+}
+
 
 // bytesToDoublesFP2 converts a pair of binary, big-endian values into 24
 // doubles that are in dclxvi's F(p²) format.

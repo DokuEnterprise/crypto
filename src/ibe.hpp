@@ -27,6 +27,8 @@ extern "C"{
 #include <gmp.h>
 #include <string>
 #include <cstdio>
+#include <stdlib.h>
+#include <fstream>
 #include <functional>
 #include <array>
 #include <iostream>
@@ -63,7 +65,12 @@ struct IdentityPrivateKey{
     twistpoint_fp2_t d;
     twistpoint_fp2_t q;
 };
- 
+
+struct intpair{
+    Int x;
+    Int y;
+};
+
 struct cipherdata{
     curvepoint_fp_t rp;
     size_t messagelen;
@@ -76,6 +83,7 @@ struct cipherdata{
 typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
 typedef struct IdentityPrivateKey idpk;
+typedef struct intpair intpair;
 
 class Ibe
 {
@@ -85,7 +93,7 @@ public:
     void extract(std::string id);
     bool test();
     cipherdata encrypt(std::string id, std::string msg);
-    void decrypt(idpk *p, cipherdata data);
+    void decrypt(idpk p, cipherdata data);
     mpriv private_key;
     mpublic public_key; 
     idpk id_private_key;
@@ -93,13 +101,8 @@ public:
     Int twist_cofactor;
 private:
     Int twist_order;
-    unsigned char key[crypto_secretbox_KEYBYTES];
+    //unsigned char key[crypto_secretbox_KEYBYTES];
 };
 
-void Set_xy_twistpoint(twistpoint_fp2_t & rop, fp2e_t x, fp2e_t y);
-
-void hash_to_point(std::string m, twistpoint_fp2_t& pt);
-void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt);
-void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt);
 
 #endif

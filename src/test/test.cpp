@@ -4,7 +4,8 @@
 using namespace std;
 
 //g++ test.cpp -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system
-int main(){
+
+void testSTARTUP(){
     Ibe d;
     d.setup();
     cout << "SETUP PASSED" << endl;
@@ -16,12 +17,21 @@ int main(){
 
     cout << d.private_key.s << endl;
     cout << "PRIVATE KEY PASSED" << endl;
+}
 
-    struct cipherdata x = d.encrypt("friedrichdoku", "hello");
-    cout << "CIPHER " << x.ciphertext << endl;
-    
-    d.decrypt(&d.id_private_key,x);
+void testENCDEC(){
+    Ibe d;
+    d.setup();
+    d.extract("fatrick@gmail.com");
 
+    struct cipherdata x = d.encrypt("fatrick@gmail.com", "hello");
+    d.decrypt(d.id_private_key,x);
 
+    //struct cipherdata y = d.encrypt("ethan", "scholar");
+}
+
+int main(){
+    testENCDEC();
     return 0;
 }
+

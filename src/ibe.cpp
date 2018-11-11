@@ -1,3 +1,5 @@
+// Copyright 2018 Doku Enterprise. All rights reserved.
+
 #define MESSAGE ((const unsigned char *) "friedrich")
 #define MESSAGE_LEN 9
 #define CIPHERTEXT_LEND (crypto_secretbox_MACBYTES + MESSAGE_LEN)
@@ -14,6 +16,9 @@ curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0
                                              {{{-2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}},
                                              {{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}},
 {{{0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
+
+curvepoint_fp_t curvegen = {
+	{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
 
 Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
 
@@ -67,7 +72,7 @@ void Ibe::setup(){
 	
 	auto secret = ui(mt);
 	auto x = cpp_int_to_scalar(secret, order);
-	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, &x);
+	curvepoint_fp_scalarmult_vartime(p, curvegen, &x);
 
     this->private_key.s = secret;
 	memcpy(this->public_key.g1, p, sizeof(p));
@@ -76,14 +81,15 @@ void Ibe::setup(){
 
 void Ibe::extract(std::string id){
 	twistpoint_fp2_t d, q;
-	// The hash to point function is getting the boost divide by zero error
+	
 	assert(id != "");
 	std::cout << "EXTRACT: HASH TO POINT MODE" << std::endl;
 	hash_to_point(id, q);
 
 	cpp_int tmp = this->private_key.s;
 	std::cout << "EXTRACT CPP_INT_TO" << std::endl;
-	auto x = cpp_int_to_scalar(tmp, compute_vars(1));
+
+	auto x = cpp_int_to_scalar(tmp, order);
 	twistpoint_fp2_scalarmult_vartime(d, q, &x);
 
 	memcpy(this->id_private_key.d, d, sizeof(d));
@@ -119,15 +125,16 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 	mt19937 mt;
     uniform_int_distribution<cpp_int> ui(0, order);
-	
 	auto secret = ui(mt);
-	auto x = cpp_int_to_scalar(secret, order);
+	auto secr = cpp_int_to_scalar(secret, order);
 
 	curvepoint_fp_t rp;
-	curvepoint_fp_scalarmult_vartime(rp, bn_curvegen, &x);
+	curvepoint_fp_scalarmult_vartime(rp, curvegen, &secr);
 
+	cpp_int p12 = p ^ p12;
+	auto scalar = cpp_int_to_scalar(secret, p12); 
 	fp12e_t er;
-	fp12e_pow_vartime(er,g,&x);
+	fp12e_pow_vartime(er,g, &scalar);
 
     //TODO: Create a data stream that holds hashed values of
     // the points (q,rp, er) and stuff. Then read them into an array and 
@@ -136,6 +143,12 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	const auto q_bytes = to_bytes(q);
 	const auto rp_bytes = to_bytes(rp);
 	const auto er_bytes = to_bytes(er);
+
+	/*FILE *fptr;
+	fptr = fopen("/home/professor/Documents/Projects/crypto/pointENCDEC.txt","a+");
+	twistpoint_fp2_print(fptr,q);
+	curvepoint_fp_print(fptr,rp);
+	fp12e_print(fptr,er);*/
 
 	// Depends you may need to write a special function to marshall each point
 	// this is a cheap version.
@@ -154,8 +167,6 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	// All thats left is the sk
 	// TODO: This may be very cheap and unsafe 
 	
-	crypto_secretbox_keygen(this->key);
-	std::cout << "KEY" <<  this->key << std::endl;
 
 	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
 	struct cipherdata d;
@@ -167,30 +178,37 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	randombytes_buf(d.nonce, sizeof(d.nonce));
 
 	crypto_secretbox_easy(d.ciphertext, reinterpret_cast<const unsigned char*>(msg.c_str()),
-		 d.messagelen,d.nonce, this->key);
+		 d.messagelen,d.nonce, reinterpret_cast<const unsigned char*>(sk.c_str()));
 
 	//std::cout << "THIS IS cipher " << cipher << std::endl;
 
 	std::copy(std::begin(rp), std::end(rp), std::begin(d.rp));
 	memcpy(d.rp, rp, sizeof(rp));
 
-	std::cout << "NONCE E: " << d.nonce << std::endl;
-	std::cout << "CIPHERTEXT E:" << d.ciphertext << std::endl;
+	//std::cout << "NONCE E: " << d.nonce << std::endl;
+	//std::cout << "CIPHERTEXT E:" << d.ciphertext << std::endl;
 	
 	return d;
 }
 
-void Ibe::decrypt(idpk *p, cipherdata data){
-	std::cout << "DECRYPTING" << std::endl;
+void Ibe::decrypt(idpk p, cipherdata data){
 	using namespace nlohmann;
+	
+	std::cout << "DECRYPTING" << std::endl;
 	fp12e_t point;
 	// rp should be equal to curvepoint
-	pair(point, data.rp, p->d);
+	pair(point, data.rp, p.d);
 
 
-	const auto b1 = to_bytes(p->q);
+	const auto b1 = to_bytes(p.q);
 	const auto b2 = to_bytes(data.rp);
 	const auto b3 = to_bytes(point);
+
+	/*FILE *fptr;
+	fptr = fopen("/home/professor/Documents/Projects/crypto/pointENCDEC.txt","a+");
+	twistpoint_fp2_print(fptr,p.q);
+	curvepoint_fp_print(fptr,data.rp);
+	fp12e_print(fptr,point);*/
 
 	// Depends you may need to write a special function to marshall each point
 	// this is a cheap version.
@@ -198,18 +216,115 @@ void Ibe::decrypt(idpk *p, cipherdata data){
 	json a2(b2);
 	json a3(b3);
 
-	std::string xtt = a1.dump() + a2.dump() + a3.dump();
+	std::string xtt = Marshal(p.q) + a2.dump() + a3.dump();
 	std::string sk = sha256(xtt);
 	std::cout << "THIS IS THE DEC SECRET " << sk << std::endl;
 
 	unsigned char de[data.messagelen];
-	if(crypto_secretbox_open_easy(de, data.ciphertext, data.cyrptolen, data.nonce, this->key) != 0){
+	if(crypto_secretbox_open_easy(de, data.ciphertext, data.cyrptolen, data.nonce, reinterpret_cast<const unsigned char*>(sk.c_str())) != 0){
 		std::cout << "MESSAGE FORGERD" << std::endl;
 
 	}else{
 		std::cout << "DECRYPTED: " << de << std::endl;
 	}
 
-	std::cout << "NONCE D: " << data.nonce << std::endl;
-	std::cout << "CIPHERTEXT D:" << data.ciphertext << std::endl;
+	//std::cout << "NONCE D: " << data.nonce << std::endl;
+	//std::cout << "CIPHERTEXT D:" << data.ciphertext << std::endl;
+}
+
+
+std::array<fp6e_t, 6> GetFp2e(fp12e_t point){
+	fp6e_t a = (fp6e_t)(point->m_a);
+	fp6e_t b = (fp6e_t)(point->m_b);
+
+	std::array<fp6e_t, 6> tmp = {a->m_a, a->m_b, a->m_c, 
+					b->m_a, b->m_b, b->m_c};
+	return tmp;
+}
+
+unsigned char* Marshal(fp12e_t point){
+	auto out = (unsigned char*) malloc(NUM_BYTES*12);
+	std::array<fp2e_t, 6> xs = GetFp2e(point);
+
+	int i = 0;
+	for(fp2e_t& x : xs){
+		auto b = Marshal(x);
+		memcpy(out + (i*NUM_BYTES*2), b, sizeof(b));
+		i++;
+	}
+	return out;
+}
+
+unsigned char* Marshal(fp2e_t point){
+	auto w = GetXY(point);
+
+	const auto x_bytes = to_bytes(numeric_cast<double>(w.x));
+	const auto y_bytes = to_bytes(numeric_cast<double>(w.y));
+
+	unsigned char* all_bytes = (unsigned char*) malloc(NUM_BYTES*2);
+
+	std::copy(std::begin(x_bytes),std::end(x_bytes), all_bytes + (1*NUM_BYTES-x_bytes.size()));
+	std::copy(std::begin(y_bytes), std::end(y_bytes), all_bytes  + (2*NUM_BYTES - y_bytes.size()));
+	return all_bytes;
+}
+
+unsigned char* Marshal(curvepoint_t point){
+	auto out = (unsigned char*) malloc(NUM_BYTES * 2);
+	fpe_t x, y;
+	GetXY(x, y, point);
+	auto tmp = Marshal(x);
+	auto tmp2 = Marshal(y);
+
+	memcpy(out, tmp, sizeof(tmp));
+	memcpy(out + NUM_BYTES, y, sizeof(y));
+}
+
+unsigned char* Marshal(fpe_t point){
+	auto out = (unsigned char*) malloc(NUM_BYTES);
+	cpp_int tmp;
+
+	convert_context c;
+	tmp = c.doubles_to_int(tmp, point->v[0]);
+	const auto bytes = to_bytes(numeric_cast<double>(tmp));
+	memcpy(out + (NUM_BYTES - bytes.size()), bytes, sizeof(bytes));
+	return out;
+}
+
+unsigned char* Marshal(twistpoint_fp2_t point){
+	auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char));
+	fp2e_t x, y;
+	GetXY(x,y,point);
+
+	auto serix = Marshal(x);
+	auto seriy = Marshal(y);
+
+	memcpy(out, serix, sizeof(serix));
+	memcpy((out + (NUM_BYTES*2)),seriy, sizeof(seriy));
+	return out;
+}
+
+void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point){
+	twistpoint_fp2_makeaffine(point);
+	fp2e_set(r1, point->m_x[0]);
+	fp2e_set(rt,point->m_y[0]);
+}
+
+struct intpair GetXY(fp2e_t point){
+	using namespace boost::multiprecision;
+
+	convert_context c;
+	cpp_int x,y;
+	auto doubles = point->v;
+	x = c.doubles_fp2_to_int(x, doubles, 1);
+	y = c.doubles_fp2_to_int(y, doubles, 0);
+	struct intpair d;
+	d.x = x;
+	d.y = y;
+	return d;
+}
+
+void GetXY(fpe_t r1, fpe_t r2, curvepoint_fp_t point){
+	curvepoint_fp_makeaffine(point);
+	fpe_set(r1, point->m_x[0]);
+	fpe_set(r1, point->m_y[0]);
 }
