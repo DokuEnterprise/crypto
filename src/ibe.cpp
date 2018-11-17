@@ -233,11 +233,13 @@ void Ibe::decrypt(idpk p, cipherdata data){
 }
 
 
-std::array<fp6e_t, 6> GetFp2e(fp12e_t point){
-	fp6e_t a = (fp6e_t)(point->m_a);
-	fp6e_t b = (fp6e_t)(point->m_b);
+std::array<fp2e_t, 6> GetFp2e(fp12e_t point){
+	fp6e_t a,b;
+	
+	memcpy(a, point->m_a,sizeof(point->m_a));
+	memcpy(b, point->m_b,sizeof(point->m_b));
 
-	std::array<fp6e_t, 6> tmp = {a->m_a, a->m_b, a->m_c, 
+	std::array<fp2e_t, 6> tmp = {{a->m_a}, a->m_b, a->m_c, 
 					b->m_a, b->m_b, b->m_c};
 	return tmp;
 }
