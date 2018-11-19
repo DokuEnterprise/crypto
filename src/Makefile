@@ -1,6 +1,6 @@
 CC = g++
 
-CPPFLAGS= -std=c++11 -fomit-frame-pointer -fPIC -DQHASM
+CPPFLAGS= -std=c++14 -fomit-frame-pointer -fPIC -DQHASM
 LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))

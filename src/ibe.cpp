@@ -216,7 +216,7 @@ void Ibe::decrypt(idpk p, cipherdata data){
 	json a2(b2);
 	json a3(b3);
 
-	std::string xtt = Marshal(p.q) + a2.dump() + a3.dump();
+	std::string xtt = Marshal(p.q) + Marshal(data.rp) + Marshal(point);
 	std::string sk = sha256(xtt);
 	std::cout << "THIS IS THE DEC SECRET " << sk << std::endl;
 
@@ -233,20 +233,26 @@ void Ibe::decrypt(idpk p, cipherdata data){
 }
 
 
-std::array<fp2e_t, 6> GetFp2e(fp12e_t point){
+std::vector<fp2e_t> GetFp2e(fp12e_t point){
 	fp6e_t a,b;
 	
 	memcpy(a, point->m_a,sizeof(point->m_a));
 	memcpy(b, point->m_b,sizeof(point->m_b));
 
-	std::array<fp2e_t, 6> tmp = {{a->m_a}, a->m_b, a->m_c, 
-					b->m_a, b->m_b, b->m_c};
+	std::vector<fp2e_t> tmp(6);
+	memcpy(tmp[0], a->m_a,sizeof(a->m_a));
+	memcpy(tmp[0], a->m_b,sizeof(a->m_b));
+	memcpy(tmp[0], a->m_c,sizeof(a->m_c));
+
+	memcpy(tmp[0], b->m_a,sizeof(b->m_a));
+	memcpy(tmp[0], b->m_b,sizeof(b->m_b));
+	memcpy(tmp[0], b->m_c,sizeof(b->m_c));
 	return tmp;
 }
 
 unsigned char* Marshal(fp12e_t point){
 	auto out = (unsigned char*) malloc(NUM_BYTES*12);
-	std::array<fp2e_t, 6> xs = GetFp2e(point);
+	std::vector<fp2e_t> xs = GetFp2e(point);
 
 	int i = 0;
 	for(fp2e_t& x : xs){
@@ -270,7 +276,7 @@ unsigned char* Marshal(fp2e_t point){
 	return all_bytes;
 }
 
-unsigned char* Marshal(curvepoint_t point){
+unsigned char* Marshal(curvepoint_fp_t point){
 	auto out = (unsigned char*) malloc(NUM_BYTES * 2);
 	fpe_t x, y;
 	GetXY(x, y, point);
@@ -286,9 +292,15 @@ unsigned char* Marshal(fpe_t point){
 	cpp_int tmp;
 
 	convert_context c;
-	tmp = c.doubles_to_int(tmp, point->v[0]);
-	const auto bytes = to_bytes(numeric_cast<double>(tmp));
-	memcpy(out + (NUM_BYTES - bytes.size()), bytes, sizeof(bytes));
+	tmp = c.doubles_to_int(tmp, &point->v[0]);
+	auto bytes = to_bytes(numeric_cast<double>(tmp));
+
+	unsigned char arr[8];
+	for(int i = 0; i < bytes.size(); i++){
+		arr[i] = bytes[i];
+	}
+
+	memcpy(out + (NUM_BYTES - bytes.size()), arr, sizeof(arr));
 	return out;
 }
 
@@ -307,8 +319,8 @@ unsigned char* Marshal(twistpoint_fp2_t point){
 
 void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point){
 	twistpoint_fp2_makeaffine(point);
-	fp2e_set(r1, point->m_x[0]);
-	fp2e_set(rt,point->m_y[0]);
+	fp2e_set(r1, &point->m_x[0]);
+	fp2e_set(r2,&point->m_y[0]);
 }
 
 struct intpair GetXY(fp2e_t point){
@@ -327,6 +339,6 @@ struct intpair GetXY(fp2e_t point){
 
 void GetXY(fpe_t r1, fpe_t r2, curvepoint_fp_t point){
 	curvepoint_fp_makeaffine(point);
-	fpe_set(r1, point->m_x[0]);
-	fpe_set(r1, point->m_y[0]);
+	fpe_set(r1, &point->m_x[0]);
+	fpe_set(r1, &point->m_y[0]);
 }
