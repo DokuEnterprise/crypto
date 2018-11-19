@@ -135,38 +135,21 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto scalar = cpp_int_to_scalar(secret, p12); 
 	fp12e_t er;
 	fp12e_pow_vartime(er,g, &scalar);
-
-    //TODO: Create a data stream that holds hashed values of
-    // the points (q,rp, er) and stuff. Then read them into an array and 
-	// seal them using sodium secret box.
 	
-	const auto q_bytes = to_bytes(q);
-	const auto rp_bytes = to_bytes(rp);
-	const auto er_bytes = to_bytes(er);
+	/* Here */
+	
+	auto qc = Marshal(q);
+	auto rpc = Marshal(rp);
+	auto erc = Marshal(er);
 
-	/*FILE *fptr;
-	fptr = fopen("/home/professor/Documents/Projects/crypto/pointENCDEC.txt","a+");
-	twistpoint_fp2_print(fptr,q);
-	curvepoint_fp_print(fptr,rp);
-	fp12e_print(fptr,er);*/
+	auto xtt = (unsigned char*) malloc(sizeof(qc) + sizeof(rpc) + sizeof(erc));
+	memcpy(xtt, qc, sizeof(qc));
+	memcpy(xtt + sizeof(qc), rpc, sizeof(rpc));
+	memcpy(xtt +(sizeof(qc) + sizeof(rpc)), erc, sizeof(erc));
 
-	// Depends you may need to write a special function to marshall each point
-	// this is a cheap version.
-	json q_array(q_bytes);
-	json rp_array(rp_bytes);
-	json er_array(er_bytes);
-
-	std::string xtt = q_array.dump() + rp_array.dump() + er_array.dump();
 	std::string sk;
-	sk = sha256(xtt);
+	sk = sha256(reinterpret_cast<char*>(xtt));
 	std::cout << "THIS IS THE ENC SECRET " << sk << std::endl;
-
-	/*for(int i = 0; i < 32; ++i){
-		sk[i] = xtt[i];
-	}*/
-	// All thats left is the sk
-	// TODO: This may be very cheap and unsafe 
-	
 
 	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
 	struct cipherdata d;
@@ -199,25 +182,16 @@ void Ibe::decrypt(idpk p, cipherdata data){
 	// rp should be equal to curvepoint
 	pair(point, data.rp, p.d);
 
+	auto q = Marshal(p.q);
+	auto rp = Marshal(data.rp);
+	auto d = Marshal(point);
 
-	const auto b1 = to_bytes(p.q);
-	const auto b2 = to_bytes(data.rp);
-	const auto b3 = to_bytes(point);
+	auto xtt = (unsigned char*) malloc(sizeof(q) + sizeof(rp) + sizeof(d));
+	memcpy(xtt, q, sizeof(q));
+	memcpy(xtt + sizeof(q), rp, sizeof(rp));
+	memcpy(xtt +(sizeof(q) + sizeof(rp)), d, sizeof(d));
 
-	/*FILE *fptr;
-	fptr = fopen("/home/professor/Documents/Projects/crypto/pointENCDEC.txt","a+");
-	twistpoint_fp2_print(fptr,p.q);
-	curvepoint_fp_print(fptr,data.rp);
-	fp12e_print(fptr,point);*/
-
-	// Depends you may need to write a special function to marshall each point
-	// this is a cheap version.
-	json a1(b1);
-	json a2(b2);
-	json a3(b3);
-
-	std::string xtt = Marshal(p.q) + Marshal(data.rp) + Marshal(point);
-	std::string sk = sha256(xtt);
+	std::string sk = sha256(reinterpret_cast<char*>(xtt));
 	std::cout << "THIS IS THE DEC SECRET " << sk << std::endl;
 
 	unsigned char de[data.messagelen];
