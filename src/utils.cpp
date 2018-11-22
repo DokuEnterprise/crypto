@@ -12,21 +12,21 @@ namespace utils{
     const scalar_t pMinus3Div4 = {0x86172b1b17822599, 0x7b96e234482d6d67, 0x6a9bfb2e18613708, 0x23ed4078d2a8e1fe};
     const scalar_t pMinus1Div2 = {0xc2e56362f044b33, 0xf72dc468905adacf, 0xd537f65c30c26e10, 0x47da80f1a551c3fc};
 
-    std::string sha256(std::string string){
-        const char * str = string.c_str();
-        char outputBuffer[65];
+    std::string sha256(const std::string str)
+    {
+        using namespace std;
+
         unsigned char hash[SHA256_DIGEST_LENGTH];
         SHA256_CTX sha256;
-        SHA256_Init( & sha256);
-        SHA256_Update( & sha256, str, strlen(str));
-        SHA256_Final(hash, & sha256);
-        int i = 0;
-        for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-            sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
+        SHA256_Init(&sha256);
+        SHA256_Update(&sha256, str.c_str(), str.size());
+        SHA256_Final(hash, &sha256);
+        stringstream ss;
+        for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+        {
+            ss << hex << setw(2) << setfill('0') << (int)hash[i];
         }
-        outputBuffer[64] = 0;
-        std::string output(outputBuffer);
-        return output;
+        return ss.str();
     }
 
     void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65]){
@@ -114,12 +114,24 @@ namespace utils{
         }
     }
 
+    int cpp_int_compare(cpp_int op, cpp_int val){
+        if(op < val){
+            return -1;
+        }
+        if(op > val){
+            return 1;
+        }
+        if(op == val){
+            return 0;
+        }
+    }
+
     // Divide by zero boost problem.
     // This function needs to be fixed
 
     std::array < uint64_t, 4 > cppint_to_words(cpp_int k_in, cpp_int bound){
         cpp_int k;
-        if (k_in.sign() < 0 || k_in.compare(bound) >= 0) {
+        if ((k_in.sign() < 0) || (cpp_int_compare(k_in, bound) >= 0)) {
             // This is where the problem is k_in and bound are both 0 for some reason
             k = k_in % bound;
         } else {
@@ -137,13 +149,16 @@ namespace utils{
         return words;
     }
 
-    const unsigned long long cpp_int_to_scalar(cpp_int k_in, cpp_int bound){
-        std::cout << "cpp_int_to_scalar" << k_in << std::endl;
-        std::cout << "cpp_int_to_scalar" << bound << std::endl;
+    unsigned long long* cpp_int_to_scalar(cpp_int k_in, cpp_int bound){
+        using boost::numeric_cast;
+        //std::cout << "cpp_int_to_scalar" << k_in << std::endl;
+        //std::cout << "cpp_int_to_scalar" << bound << std::endl;
         auto words = cppint_to_words(k_in, bound);
-        auto tmp = static_cast <
-        const unsigned long long > ( * ( & words[0]));
-        return tmp;
+        unsigned long long* x = (unsigned long long*) malloc(4 * sizeof(unsigned long long));
+        for(int i = 0; i < words.size(); ++i){
+            x[i] = numeric_cast<unsigned long long>(words[i]);
+        }
+        return x;
     }
 }
 

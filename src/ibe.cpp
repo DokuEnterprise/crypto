@@ -17,11 +17,13 @@ curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0
                                              {{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}},
 {{{0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
 
-curvepoint_fp_t curvegen = {
-	{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
+curvepoint_fp_t curvegen;
+
+//curveGen = (*curvePoint)(&C.bn_curvegen[0])
 
 Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
 
+testpoints x;
 // This needs to be cleaned up later
 Int compute_vars(bool t_order){
 	if(t_order){
@@ -50,8 +52,9 @@ Ibe::Ibe(){
 	//this->twist_order = p * 2;
 	//this->twist_order = twist_order - order;
 	//this->twist_order = twist_order * order;
-
+	curvepoint_fp_set(curvegen, &bn_curvegen[0]);
 	Set_xy_fp2e(SET1, SET2,this->twistB);
+	
 
 	//this->twist_cofactor = 2 * p;
 	//this->twist_cofactor = this->twist_cofactor - order;
@@ -66,13 +69,14 @@ void Ibe::setup(){
 	using namespace boost::random;
 
 	curvepoint_fp_t p;
-
+	// p is blank for some reason
+	// something is wrong with curvegen
 	mt19937 mt;
     uniform_int_distribution<cpp_int> ui(0, order);
 	
 	auto secret = ui(mt);
 	auto x = cpp_int_to_scalar(secret, order);
-	curvepoint_fp_scalarmult_vartime(p, curvegen, &x);
+	curvepoint_fp_scalarmult_vartime(p, curvegen, x);
 
     this->private_key.s = secret;
 	memcpy(this->public_key.g1, p, sizeof(p));
@@ -85,15 +89,15 @@ void Ibe::extract(std::string id){
 	assert(id != "");
 	std::cout << "EXTRACT: HASH TO POINT MODE" << std::endl;
 	hash_to_point(id, q);
+	memcpy(this->id_private_key.q, q, sizeof(q));
 
 	cpp_int tmp = this->private_key.s;
 	std::cout << "EXTRACT CPP_INT_TO" << std::endl;
 
 	auto x = cpp_int_to_scalar(tmp, order);
-	twistpoint_fp2_scalarmult_vartime(d, q, &x);
+	twistpoint_fp2_scalarmult_vartime(d, q, x);
 
 	memcpy(this->id_private_key.d, d, sizeof(d));
-	memcpy(this->id_private_key.q, q, sizeof(q));
 }
 
 bool Ibe::test(){
@@ -129,12 +133,13 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto secr = cpp_int_to_scalar(secret, order);
 
 	curvepoint_fp_t rp;
-	curvepoint_fp_scalarmult_vartime(rp, curvegen, &secr);
+	curvepoint_fp_scalarmult_vartime(rp, curvegen, secr);
 
-	cpp_int p12 = p ^ p12;
+	cpp_int p12 = p ^ 12;
 	auto scalar = cpp_int_to_scalar(secret, p12); 
+
 	fp12e_t er;
-	fp12e_pow_vartime(er,g, &scalar);
+	fp12e_pow_vartime(er,g, scalar);
 	
 	/* Here */
 	
@@ -142,6 +147,14 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto rpc = Marshal(rp);
 	auto erc = Marshal(er);
 
+	FILE *fptr;
+	fptr = fopen("/home/professor/Documents/Projects/crypto/fpENC.txt","a+");
+	fp12e_print(fptr,er);
+
+	memcpy(x.p1, q, sizeof(q));
+	memcpy(x.p2, rp, sizeof(rp));
+	memcpy(x.p3, er, sizeof(er));
+	
 	auto xtt = (unsigned char*) malloc(sizeof(qc) + sizeof(rpc) + sizeof(erc));
 	memcpy(xtt, qc, sizeof(qc));
 	memcpy(xtt + sizeof(qc), rpc, sizeof(rpc));
@@ -165,7 +178,7 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 	//std::cout << "THIS IS cipher " << cipher << std::endl;
 
-	std::copy(std::begin(rp), std::end(rp), std::begin(d.rp));
+	//std::copy(std::begin(rp), std::end(rp), std::begin(d.rp));
 	memcpy(d.rp, rp, sizeof(rp));
 
 	//std::cout << "NONCE E: " << d.nonce << std::endl;
@@ -182,9 +195,15 @@ void Ibe::decrypt(idpk p, cipherdata data){
 	// rp should be equal to curvepoint
 	pair(point, data.rp, p.d);
 
+	FILE *fptr;
+	fptr = fopen("/home/professor/Documents/Projects/crypto/fpDEC.txt","a+");
+	fp12e_print(fptr,point);
+
 	auto q = Marshal(p.q);
 	auto rp = Marshal(data.rp);
 	auto d = Marshal(point);
+	//curvepoint_fp_print(fptr,rp);
+	//fp12e_print(fptr,er);
 
 	auto xtt = (unsigned char*) malloc(sizeof(q) + sizeof(rp) + sizeof(d));
 	memcpy(xtt, q, sizeof(q));

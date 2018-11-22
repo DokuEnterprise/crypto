@@ -25,7 +25,8 @@ extern "C"{
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/integer.hpp>
-#include <boost/cerrno.hpp> 
+#include <boost/cerrno.hpp>
+#include <boost/numeric/conversion/cast.hpp> 
 
 namespace utils{
 
@@ -60,9 +61,11 @@ namespace utils{
     int fp2e_sqrt(fp2e_t rop,
         const fp2e_t a);
 
+
+    int cpp_int_compare(cpp_int op, cpp_int val);
     std::array < uint64_t, 4 > cppint_to_words(cpp_int k_in, cpp_int bound);
 
-    const unsigned long long cpp_int_to_scalar(cpp_int k_in, cpp_int bound);
+    unsigned long long* cpp_int_to_scalar(cpp_int k_in, cpp_int bound);
     // Extra functions needed for crypto
 
 }

@@ -16,7 +16,7 @@ void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t rop){
 	//std::cout << "hash_to_twist_subgroup " << twist_cofactor << std::endl;
 	//std::cout << "hash_to_twist_subgroup " << twist_order << std::endl; 
 	auto x = cpp_int_to_scalar(twist_cofactor, twist_order);
-	twistpoint_fp2_scalarmult_vartime(rop,rop, &x);
+	twistpoint_fp2_scalarmult_vartime(rop,rop, x);
 	twistpoint_fp2_makeaffine(rop);
 }
 
@@ -94,5 +94,13 @@ void Set_xy_twistpoint(twistpoint_fp2_t rop, fp2e_t x, fp2e_t y){
 }
 
 void pair(fp12e_t result,curvepoint_fp_t c, twistpoint_fp2_t t){
-    optate(result,t,c);
+	curvepoint_fp_t tmp1;
+	twistpoint_fp2_t tmp2;
+
+	curvepoint_fp_set(tmp1, c);
+	twistpoint_fp2_set(tmp2, t);
+
+	curvepoint_fp_makeaffine(tmp1);
+	twistpoint_fp2_makeaffine(tmp2);
+    optate(result,tmp2,tmp1);
 }

@@ -71,15 +71,23 @@ struct intpair{
     Int y;
 };
 
+struct TestPoints{
+    twistpoint_fp2_t p1;
+    curvepoint_fp_t p2;
+    fp12e_t p3;
+};
+
 struct cipherdata{
     curvepoint_fp_t rp;
     size_t messagelen;
     size_t cyrptolen;
     // May not work with all compilers: the size 
-    // of the struct must be know at compile time for some compilers
+    // of the struct must be known at compile time for some compilers
     unsigned char* nonce;
     unsigned char* ciphertext;
 };
+
+typedef struct TestPoints testpoints;
 typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
 typedef struct IdentityPrivateKey idpk;
