@@ -87,12 +87,12 @@ void Ibe::extract(std::string id){
 	twistpoint_fp2_t d, q;
 	
 	assert(id != "");
-	std::cout << "EXTRACT: HASH TO POINT MODE" << std::endl;
+	//std::cout << "EXTRACT: HASH TO POINT MODE" << std::endl;
 	hash_to_point(id, q);
 	memcpy(this->id_private_key.q, q, sizeof(q));
 
 	cpp_int tmp = this->private_key.s;
-	std::cout << "EXTRACT CPP_INT_TO" << std::endl;
+	//std::cout << "EXTRACT CPP_INT_TO" << std::endl;
 
 	auto x = cpp_int_to_scalar(tmp, order);
 	twistpoint_fp2_scalarmult_vartime(d, q, x);
@@ -113,6 +113,8 @@ bool Ibe::test(){
 	unsigned char decrypted[MESSAGE_LEN];
 	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEND, NULL, key) == 0) {
 		return true;
+	}else{
+		return false;
 	}
 }
 
@@ -278,6 +280,7 @@ unsigned char* Marshal(curvepoint_fp_t point){
 
 	memcpy(out, tmp, sizeof(tmp));
 	memcpy(out + NUM_BYTES, y, sizeof(y));
+	return out;
 }
 
 unsigned char* Marshal(fpe_t point){
