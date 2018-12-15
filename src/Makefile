@@ -1,7 +1,7 @@
 CC = g++
 
 CPPFLAGS= -std=c++14 -fomit-frame-pointer -fPIC -DQHASM
-LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
+LDFLAGS= -shared -L/usr/local/lib -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TEST_FLAGS =  -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system 

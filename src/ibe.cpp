@@ -17,9 +17,7 @@ curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0
                                              {{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}},
 {{{0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}}}}};
 
-curvepoint_fp_t curvegen;
-
-//curveGen = (*curvePoint)(&C.bn_curvegen[0])
+//bn_curvegen = (*curvePoint)(&C.bn_bn_curvegen[0])
 
 Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
 
@@ -52,7 +50,7 @@ Ibe::Ibe(){
 	//this->twist_order = p * 2;
 	//this->twist_order = twist_order - order;
 	//this->twist_order = twist_order * order;
-	curvepoint_fp_set(curvegen, &bn_curvegen[0]);
+	std::cout << "SETXY" << std::endl;
 	Set_xy_fp2e(SET1, SET2,this->twistB);
 	
 
@@ -62,24 +60,27 @@ Ibe::Ibe(){
 	this->twist_order = twist_order;
 	this->twist_cofactor = twist_cofactor;
 	Set_xy_fp2e(SET1,SET2,twistB);
+	std::cout << "DONE" << std::endl;
 }
 
 void Ibe::setup(){
+	std::cout << "SETUP STARTED" << std::endl;
 	using namespace boost::multiprecision;
 	using namespace boost::random;
 
 	curvepoint_fp_t p;
 	// p is blank for some reason
-	// something is wrong with curvegen
+	// something is wrong with bn_curvegen
 	mt19937 mt;
     uniform_int_distribution<cpp_int> ui(0, order);
 	
 	auto secret = ui(mt);
 	auto x = cpp_int_to_scalar(secret, order);
-	curvepoint_fp_scalarmult_vartime(p, curvegen, x);
+	curvepoint_fp_scalarmult_vartime(p, bn_curvegen, x);
 
     this->private_key.s = secret;
 	memcpy(this->public_key.g1, p, sizeof(p));
+	std::cout << "SETUP DONE" << std::endl;
 }
 
 
@@ -98,6 +99,7 @@ void Ibe::extract(std::string id){
 	twistpoint_fp2_scalarmult_vartime(d, q, x);
 
 	memcpy(this->id_private_key.d, d, sizeof(d));
+	std::cout << "EXTRACT FINISHED" << std::endl;
 }
 
 bool Ibe::test(){
@@ -135,7 +137,7 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto secr = cpp_int_to_scalar(secret, order);
 
 	curvepoint_fp_t rp;
-	curvepoint_fp_scalarmult_vartime(rp, curvegen, secr);
+	curvepoint_fp_scalarmult_vartime(rp, bn_curvegen, secr);
 
 	cpp_int p12 = p ^ 12;
 	auto scalar = cpp_int_to_scalar(secret, p12); 
@@ -149,20 +151,16 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto rpc = Marshal(rp);
 	auto erc = Marshal(er);
 
-	FILE *fptr;
+	/*FILE *fptr;
 	fptr = fopen("/home/professor/Documents/Projects/crypto/fpENC.txt","a+");
-	fp12e_print(fptr,er);
-
-	memcpy(x.p1, q, sizeof(q));
-	memcpy(x.p2, rp, sizeof(rp));
-	memcpy(x.p3, er, sizeof(er));
+	fp12e_print(fptr,er);*/
 	
 	auto xtt = (unsigned char*) malloc(sizeof(qc) + sizeof(rpc) + sizeof(erc));
 	memcpy(xtt, qc, sizeof(qc));
 	memcpy(xtt + sizeof(qc), rpc, sizeof(rpc));
 	memcpy(xtt +(sizeof(qc) + sizeof(rpc)), erc, sizeof(erc));
 
-	std::string sk;
+	std::string sk; 
 	sk = sha256(reinterpret_cast<char*>(xtt));
 	std::cout << "THIS IS THE ENC SECRET " << sk << std::endl;
 
@@ -185,6 +183,8 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 	//std::cout << "NONCE E: " << d.nonce << std::endl;
 	//std::cout << "CIPHERTEXT E:" << d.ciphertext << std::endl;
+	std::cout << "F10" << std::endl;
+	std::cout.flush();
 	
 	return d;
 }
@@ -301,7 +301,7 @@ unsigned char* Marshal(fpe_t point){
 }
 
 unsigned char* Marshal(twistpoint_fp2_t point){
-	auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char));
+	auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char)); 
 	fp2e_t x, y;
 	GetXY(x,y,point);
 
@@ -317,7 +317,7 @@ void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point){
 	twistpoint_fp2_makeaffine(point);
 	fp2e_set(r1, &point->m_x[0]);
 	fp2e_set(r2,&point->m_y[0]);
-}
+}		
 
 struct intpair GetXY(fp2e_t point){
 	using namespace boost::multiprecision;
