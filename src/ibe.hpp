@@ -116,11 +116,15 @@ private:
 struct intpair GetXY(fp2e_t point);
 
 std::vector<fp2e_t> GetFp2e(fp12e_t point);
-unsigned char* Marshal(fp12e_t point);
-unsigned char* Marshal(fp2e_t point);
-unsigned char* Marshal(curvepoint_fp_t point);
-unsigned char* Marshal(fpe_t point);
-unsigned char* Marshal(twistpoint_fp2_t point);
+
+// Marshall Functions
+std::vector<unsigned char> Marshal(fp12e_t point);
+std::vector<unsigned char> Marshal(fp2e_t point);
+std::vector<unsigned char> Marshal(curvepoint_fp_t point);
+std::vector<unsigned char> Marshal(fpe_t point);
+std::vector<unsigned char> Marshal(twistpoint_fp2_t point);
+
+
 void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point);
 
 void GetXY(fpe_t r1, fpe_t r2, curvepoint_fp_t point);

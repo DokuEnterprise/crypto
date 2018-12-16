@@ -154,14 +154,18 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	/*FILE *fptr;
 	fptr = fopen("/home/professor/Documents/Projects/crypto/fpENC.txt","a+");
 	fp12e_print(fptr,er);*/
-	
-	auto xtt = (unsigned char*) malloc(sizeof(qc) + sizeof(rpc) + sizeof(erc));
-	memcpy(xtt, qc, sizeof(qc));
-	memcpy(xtt + sizeof(qc), rpc, sizeof(rpc));
-	memcpy(xtt +(sizeof(qc) + sizeof(rpc)), erc, sizeof(erc));
 
-	std::string sk; 
-	sk = sha256(reinterpret_cast<char*>(xtt));
+	std::vector<unsigned char> xtt;
+	xtt.insert(xtt.end(), qc.begin(), qc.end());
+	xtt.insert(xtt.end(), rpc.begin(), rpc.end());
+	xtt.insert(xtt.end(), erc.begin(), erc.end());
+
+	std::cout << "MARSHALL PASSED" << std::endl;
+
+	std::string str(xtt.begin(), xtt.end());
+
+	std::string sk = sha256(str);
+
 	std::cout << "THIS IS THE ENC SECRET " << sk << std::endl;
 
 	//std::cout << "THIS IS A SECRET " << xtt.c_str() << std::endl;
@@ -183,36 +187,45 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 	//std::cout << "NONCE E: " << d.nonce << std::endl;
 	//std::cout << "CIPHERTEXT E:" << d.ciphertext << std::endl;
-	std::cout << "F10" << std::endl;
-	std::cout.flush();
+
+
+	std::cout << "DONE ENCRYPTING" << std::endl;
 	
+	//std::cout.flush();
 	return d;
 }
 
 void Ibe::decrypt(idpk p, cipherdata data){
 	using namespace nlohmann;
+	// TODO: Figure out why the computation of the points is 
+	// fucking off.
 	
 	std::cout << "DECRYPTING" << std::endl;
 	fp12e_t point;
 	// rp should be equal to curvepoint
 	pair(point, data.rp, p.d);
+	std::cout << "THE PAIR IS NOT FUCKED UP" << std::endl;
 
-	FILE *fptr;
+	/*FILE *fptr;
 	fptr = fopen("/home/professor/Documents/Projects/crypto/fpDEC.txt","a+");
-	fp12e_print(fptr,point);
+	fp12e_print(fptr,point);*/
+	std::cout << "THE MARSHAL PRINT SHIT WORKS" << std::endl;
 
-	auto q = Marshal(p.q);
-	auto rp = Marshal(data.rp);
+	auto q = Marshal(p.q);      // Fixed runtime errors
+	auto rp = Marshal(data.rp); // Fixed runtime errors
 	auto d = Marshal(point);
+	std::cout << "THE MARSHAL SHIT WORKS" << std::endl;
 	//curvepoint_fp_print(fptr,rp);
 	//fp12e_print(fptr,er);
 
-	auto xtt = (unsigned char*) malloc(sizeof(q) + sizeof(rp) + sizeof(d));
-	memcpy(xtt, q, sizeof(q));
-	memcpy(xtt + sizeof(q), rp, sizeof(rp));
-	memcpy(xtt +(sizeof(q) + sizeof(rp)), d, sizeof(d));
+	std::vector<unsigned char> xtt;
+	xtt.insert(xtt.end(), q.begin(), q.end());
+	xtt.insert(xtt.end(), rp.begin(), rp.end());
+	xtt.insert(xtt.end(), d.begin(), d.end());
 
-	std::string sk = sha256(reinterpret_cast<char*>(xtt));
+	std::string str(xtt.begin(), xtt.end());
+
+	std::string sk = sha256(str);
 	std::cout << "THIS IS THE DEC SECRET " << sk << std::endl;
 
 	unsigned char de[data.messagelen];
@@ -236,83 +249,122 @@ std::vector<fp2e_t> GetFp2e(fp12e_t point){
 
 	std::vector<fp2e_t> tmp(6);
 	memcpy(tmp[0], a->m_a,sizeof(a->m_a));
-	memcpy(tmp[0], a->m_b,sizeof(a->m_b));
-	memcpy(tmp[0], a->m_c,sizeof(a->m_c));
+	memcpy(tmp[1], a->m_b,sizeof(a->m_b));
+	memcpy(tmp[2], a->m_c,sizeof(a->m_c));
 
-	memcpy(tmp[0], b->m_a,sizeof(b->m_a));
-	memcpy(tmp[0], b->m_b,sizeof(b->m_b));
-	memcpy(tmp[0], b->m_c,sizeof(b->m_c));
+	memcpy(tmp[3], b->m_a,sizeof(b->m_a));
+	memcpy(tmp[4], b->m_b,sizeof(b->m_b));
+	memcpy(tmp[5], b->m_c,sizeof(b->m_c));
 	return tmp;
 }
 
-unsigned char* Marshal(fp12e_t point){
-	auto out = (unsigned char*) malloc(NUM_BYTES*12);
+std::vector<unsigned char> Marshal(fp12e_t point){
+	std::vector<unsigned char> out(NUM_BYTES * 12); //= (unsigned char*) malloc(NUM_BYTES*12);
 	std::vector<fp2e_t> xs = GetFp2e(point);
 
 	int i = 0;
 	for(fp2e_t& x : xs){
 		auto b = Marshal(x);
-		memcpy(out + (i*NUM_BYTES*2), b, sizeof(b));
+		// TODO: Check if this is the right way to do this
+		//std::copy(out.begin() + (i*(NUM_BYTES*2)), out.end(), b);
+		std::copy(b.begin(), b.end(), out.begin() + (i*(NUM_BYTES*2)));
+		//memcpy(out + (i*NUM_BYTES*2), b, sizeof(b));
 		i++;
 	}
+	std::cout << "COMPLETED SUCSESSFULLY FP12e" << std::endl;
 	return out;
 }
 
-unsigned char* Marshal(fp2e_t point){
+std::vector<unsigned char> Marshal(fp2e_t point){
+
+	// A Segmentation fault happend ealier in this 
+	// function because I tried to access memory
+	// that I did not have access to.
+	// It turns out std::copy() does not change the size
+	// of the vector
 	auto w = GetXY(point);
 
 	const auto x_bytes = to_bytes(numeric_cast<double>(w.x));
 	const auto y_bytes = to_bytes(numeric_cast<double>(w.y));
+	
 
-	unsigned char* all_bytes = (unsigned char*) malloc(NUM_BYTES*2);
+	std::vector<unsigned char> all_bytes(NUM_BYTES*2);
+	//unsigned char* all_bytes = (unsigned char*) malloc(NUM_BYTES*2);
 
-	std::copy(std::begin(x_bytes),std::end(x_bytes), all_bytes + (1*NUM_BYTES-x_bytes.size()));
-	std::copy(std::begin(y_bytes), std::end(y_bytes), all_bytes  + (2*NUM_BYTES - y_bytes.size()));
+	try{
+		std::copy(x_bytes.begin(), x_bytes.end(), all_bytes.begin() + (1*NUM_BYTES-x_bytes.size()));
+		std::copy(y_bytes.begin(), y_bytes.end(), all_bytes.begin()  + (2*NUM_BYTES - y_bytes.size()));
+	} catch(std::exception& e) {
+      std::cerr << e.what() << std::endl;
+    }
+
 	return all_bytes;
 }
 
-unsigned char* Marshal(curvepoint_fp_t point){
-	auto out = (unsigned char*) malloc(NUM_BYTES * 2);
+std::vector<unsigned char> Marshal(curvepoint_fp_t point){
+	//auto out = (unsigned char*) malloc(NUM_BYTES * 2);
+	std::vector<unsigned char> out(NUM_BYTES * 2);
 	fpe_t x, y;
+	
 	GetXY(x, y, point);
+	std::cout << "The GET FUNCTION WORKS" << std::endl;
 	auto tmp = Marshal(x);
 	auto tmp2 = Marshal(y);
+	std::cout << "MARSHAL FPE WORKS" << std::endl;
 
-	memcpy(out, tmp, sizeof(tmp));
-	memcpy(out + NUM_BYTES, y, sizeof(y));
+	std::copy(tmp.begin(), tmp.end(), out.begin());
+	std::copy(tmp2.begin(), tmp2.end(), out.begin() + NUM_BYTES);
+	//memcpy(out, tmp, sizeof(tmp));
+	//memcpy(out + NUM_BYTES, y, sizeof(y));
+	std::cout << "COMPLETED SUCSESSFULLY CURVEPOINT" << std::endl;
 	return out;
 }
 
-unsigned char* Marshal(fpe_t point){
-	auto out = (unsigned char*) malloc(NUM_BYTES);
+// TODO: Fix the rest of these funcitons
+std::vector<unsigned char> Marshal(fpe_t point){
+	std::vector<unsigned char> out(NUM_BYTES);
 	cpp_int tmp;
 
+	// TODO: Check the doubles to int function
 	convert_context c;
 	tmp = c.doubles_to_int(tmp, &point->v[0]);
 	auto bytes = to_bytes(numeric_cast<double>(tmp));
 
-	unsigned char arr[8];
+	/*unsigned char arr[8];
 	for(int i = 0; i < bytes.size(); i++){
 		arr[i] = bytes[i];
-	}
+	}*/
 
-	memcpy(out + (NUM_BYTES - bytes.size()), arr, sizeof(arr));
+	std::copy(std::begin(bytes), std::end(bytes), out.begin() + (NUM_BYTES - bytes.size()));
+	//memcpy(out + (NUM_BYTES - bytes.size()), arr, sizeof(arr));
 	return out;
 }
 
-unsigned char* Marshal(twistpoint_fp2_t point){
-	auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char)); 
+std::vector<unsigned char> Marshal(twistpoint_fp2_t point){
+	//auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char));
+	std::cout << " MARSHAL TWSITPOINT STARTED" << std::endl;
+	std::vector<unsigned char> out(NUM_BYTES * 4); 
 	fp2e_t x, y;
 	GetXY(x,y,point);
+	std::cout << "GETXY COMPLETED" << std::endl;
 
+	// TODO: Fix the Marshall fp2e function
 	auto serix = Marshal(x);
 	auto seriy = Marshal(y);
+	std::cout << "MARSHAL FP2E passed" << std::endl;
 
-	memcpy(out, serix, sizeof(serix));
+	/*memcpy(out, serix, sizeof(serix));
 	memcpy((out + (NUM_BYTES*2)),seriy, sizeof(seriy));
+	std::cout << std::string(reinterpret_cast<char*>(out)) << std::endl;
+	return std::string(reinterpret_cast<char*>(out));*/
+
+	std::copy(serix.begin(), serix.end(), out.begin());
+	std::copy(seriy.begin(), seriy.end(), out.begin() + (NUM_BYTES*2));
+	std::cout << "COMPLETED SUCSESSFULLY TWSITPOINT" << std::endl;
 	return out;
 }
 
+// TODO: Check the GetXY Functions
 void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point){
 	twistpoint_fp2_makeaffine(point);
 	fp2e_set(r1, &point->m_x[0]);
