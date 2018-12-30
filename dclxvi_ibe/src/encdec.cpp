@@ -1,26 +1,26 @@
 #include "encdec.hpp"
 #include "vars.hpp"
 
-void hash_to_point(std::string m, twistpoint_fp2_t& pt){
-	hash_to_twist_subgroup(m, pt);
+void hash_to_point(std::string m, twistpoint_fp2_t rop){
+	hash_to_twist_subgroup(m, rop);
 }
 
 // Twist cofactor and twist order are undefined this needs to be
 // fixed.
-void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt){
-	
+void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t rop){
 	using boost::numeric_cast;
     using namespace utils;
 
-	hashtotwistpoint(m, pt);
+	hashtotwistpoint(m,rop);
 	Int t_co = p * 2;
-	std::cout << "hash_to_twist_subgroup " << twist_cofactor << std::endl;
-	std::cout << "hash_to_twist_subgroup " << twist_order << std::endl; 
+	//std::cout << "hash_to_twist_subgroup " << twist_cofactor << std::endl;
+	//std::cout << "hash_to_twist_subgroup " << twist_order << std::endl; 
 	auto x = cpp_int_to_scalar(twist_cofactor, twist_order);
-	twistpoint_fp2_scalarmult_vartime(pt,pt, &x);
+	twistpoint_fp2_scalarmult_vartime(rop,rop, x);
+	twistpoint_fp2_makeaffine(rop);
 }
 
-void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
+void hashtotwistpoint(std::string m, twistpoint_fp2_t rop){
 	using namespace boost::multiprecision;
     using namespace utils;
 
@@ -51,6 +51,7 @@ void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt){
 			twistpoint_fp2_t pt;
 			Set_xy_twistpoint(pt,x,sqr);
 			twistpoint_fp2_makeaffine(pt);
+			twistpoint_fp2_set(rop, pt);
 			break;
 		}
 		fp2e_add(x,x, one);
@@ -88,10 +89,18 @@ void Set_xy_fp2e(Int x, Int y, fp2e_t& b){
 	memcpy(b->v, c.doublesFP2, sizeof(double) * 24);
 }
 
-void Set_xy_twistpoint(twistpoint_fp2_t & rop, fp2e_t x, fp2e_t y){
+void Set_xy_twistpoint(twistpoint_fp2_t rop, fp2e_t x, fp2e_t y){
 	twistpoint_fp2_affineset_fp2e(rop, x, y);
 }
 
-void pair(fp12e_t& result,curvepoint_fp_t c, twistpoint_fp2_t t){
-    optate(result,t,c);
+void pair(fp12e_t result,curvepoint_fp_t c, twistpoint_fp2_t t){
+	curvepoint_fp_t tmp1;
+	twistpoint_fp2_t tmp2;
+
+	curvepoint_fp_set(tmp1, c);
+	twistpoint_fp2_set(tmp2, t);
+
+	curvepoint_fp_makeaffine(tmp1);
+	twistpoint_fp2_makeaffine(tmp2);
+    optate(result,tmp2,tmp1);
 }

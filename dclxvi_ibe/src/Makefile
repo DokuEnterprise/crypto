@@ -1,8 +1,7 @@
 CC = g++
 
-CPPFLAGS= -std=c++11 -fomit-frame-pointer -fPIC -DQHASM
-
-LDFLAGS= -shared -L/usr/local/lib -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
+CPPFLAGS= -std=c++14 -fomit-frame-pointer -fPIC -DQHASM
+LDFLAGS= -shared -L/usr/local/lib -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
 
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TEST_FLAGS =  -ldems -ldclxvi -lcrypto -lssl -lsodium -lboost_system 
@@ -23,13 +22,8 @@ $(TARGET) : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
 
 testfiles:
-	$(CC) test/test.cpp $(TEST_FLAGS) -o test/test.o
+	$(CC) test/test.cpp $(TEST_FLAGS) -o test.o
 
 install:
 	cp $(HEADERS) /usr/local/include/dems
 	cp libdems.so /usr/local/lib
-
-install_test:
-	cp /usr/local/lib/libdclxvi.so $(ROOT_DIR)/test
-	cp /usr/local/lib/libdems.so $(ROOT_DIR)/test
-	cp /usr/local/lib/libsodium.so $(ROOT_DIR)/test

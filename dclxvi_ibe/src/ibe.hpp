@@ -21,10 +21,17 @@ extern "C"{
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/integer.hpp>
 
+#include <sodium/crypto_secretbox.h>
+#include <sodium/randombytes.h>
+
 #include <gmp.h>
 #include <string>
+#include <cstdio>
+#include <stdlib.h>
+#include <fstream>
 #include <functional>
 #include <array>
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <iterator>
@@ -37,20 +44,14 @@ extern "C"{
 //namespace mp = boost::multiprecision; 
 //namespace rd = boost::random;
 
+// Needed for sodium
+#define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES)
+
 extern curvepoint_fp_t bn_curvegen;
 
 extern Int order;
 
 using Int = boost::multiprecision::cpp_int;
-
-
-struct g2{
-	twistpoint_fp2_t p;
-};
-
-struct g1{
-	curvepoint_fp_t *p;
-};
 
 struct MasterPublicKey{
     curvepoint_fp_t g1;
@@ -65,9 +66,32 @@ struct IdentityPrivateKey{
     twistpoint_fp2_t q;
 };
 
+struct intpair{
+    Int x;
+    Int y;
+};
+
+struct TestPoints{
+    twistpoint_fp2_t p1;
+    curvepoint_fp_t p2;
+    fp12e_t p3;
+};
+
+struct cipherdata{
+    curvepoint_fp_t rp;
+    size_t messagelen;
+    size_t cyrptolen;
+    // May not work with all compilers: the size 
+    // of the struct must be known at compile time for some compilers
+    unsigned char* nonce;
+    unsigned char* ciphertext;
+};
+
+typedef struct TestPoints testpoints;
 typedef struct MasterPrivateKey mpriv;
 typedef struct MasterPublicKey mpublic;
 typedef struct IdentityPrivateKey idpk;
+typedef struct intpair intpair;
 
 class Ibe
 {
@@ -75,7 +99,9 @@ public:
     Ibe();
     void setup();
     void extract(std::string id);
-    void encrypt(std::string id, std::string msg);
+    bool test();
+    cipherdata encrypt(std::string id, std::string msg);
+    void decrypt(idpk p, cipherdata data);
     mpriv private_key;
     mpublic public_key; 
     idpk id_private_key;
@@ -83,12 +109,24 @@ public:
     Int twist_cofactor;
 private:
     Int twist_order;
+    //unsigned char key[crypto_secretbox_KEYBYTES];
 };
 
-void Set_xy_twistpoint(twistpoint_fp2_t & rop, fp2e_t x, fp2e_t y);
 
-void hash_to_point(std::string m, twistpoint_fp2_t& pt);
-void hash_to_twist_subgroup(std::string m, twistpoint_fp2_t& pt);
-void hashtotwistpoint(std::string m, twistpoint_fp2_t& pt);
+struct intpair GetXY(fp2e_t point);
+
+std::vector<fp2e_t> GetFp2e(fp12e_t point);
+
+// Marshall Functions
+std::vector<unsigned char> Marshal(fp12e_t point);
+std::vector<unsigned char> Marshal(fp2e_t point);
+std::vector<unsigned char> Marshal(curvepoint_fp_t point);
+std::vector<unsigned char> Marshal(fpe_t point);
+std::vector<unsigned char> Marshal(twistpoint_fp2_t point);
+
+
+void GetXY(fp2e_t r1, fp2e_t r2, twistpoint_fp2_t point);
+
+void GetXY(fpe_t r1, fpe_t r2, curvepoint_fp_t point);
 
 #endif
