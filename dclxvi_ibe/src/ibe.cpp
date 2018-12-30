@@ -21,7 +21,10 @@ curvepoint_fp_t bn_curvegen = {{{{{1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0
 
 Int order("65000549695646603732796438742359905742570406053903786389881062969044166799969");
 
-testpoints x;
+struct TestPoints x;
+
+std::vector<unsigned char> testp1, testp2, testp3;
+
 // This needs to be cleaned up later
 Int compute_vars(bool t_order){
 	if(t_order){
@@ -83,7 +86,6 @@ void Ibe::setup(){
 	std::cout << "SETUP DONE" << std::endl;
 }
 
-
 void Ibe::extract(std::string id){
 	twistpoint_fp2_t d, q;
 	
@@ -97,8 +99,13 @@ void Ibe::extract(std::string id){
 
 	auto x = cpp_int_to_scalar(tmp, order);
 	twistpoint_fp2_scalarmult_vartime(d, q, x);
-
+	
 	memcpy(this->id_private_key.d, d, sizeof(d));
+	/*auto dataholder = Marshal(d);
+	for(auto w : dataholder){
+		std::cout << w;
+	}
+	std::cout << std::endl;*/
 	std::cout << "EXTRACT FINISHED" << std::endl;
 }
 
@@ -126,7 +133,7 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	using namespace nlohmann;
 
 	twistpoint_fp2_t q;
-	hash_to_point(id, q);
+	hash_to_point(id, q); 
 
 	fp12e_t g;
 	pair(g, this->public_key.g1, q);
@@ -143,13 +150,29 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	auto scalar = cpp_int_to_scalar(secret, p12); 
 
 	fp12e_t er;
-	fp12e_pow_vartime(er,g, scalar);
+	fp12e_pow_vartime(er,g, secr);
+	
+	memcpy(x.p1, q, sizeof(q));
+	memcpy(x.p2, rp, sizeof(rp));
+	memcpy(x.p3, er, sizeof(er));
 	
 	/* Here */
 	
 	auto qc = Marshal(q);
 	auto rpc = Marshal(rp);
 	auto erc = Marshal(er);
+
+	std::cout << "THIS IS ERC START" << std::endl;
+	for(unsigned char x : erc){
+		std::cout << x;
+	}
+	std::cout << std::endl;
+	std::cout << "THIS IS ERC END" << std::endl;
+
+
+	testp1.insert(testp1.end(), qc.begin(), qc.end());
+	testp2.insert(testp2.end(), rpc.begin(), rpc.end());
+	testp3.insert(testp3.end(), erc.begin(), erc.end());
 
 	/*FILE *fptr;
 	fptr = fopen("/home/professor/Documents/Projects/crypto/fpENC.txt","a+");
@@ -159,8 +182,6 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 	xtt.insert(xtt.end(), qc.begin(), qc.end());
 	xtt.insert(xtt.end(), rpc.begin(), rpc.end());
 	xtt.insert(xtt.end(), erc.begin(), erc.end());
-
-	std::cout << "MARSHALL PASSED" << std::endl;
 
 	std::string str(xtt.begin(), xtt.end());
 
@@ -197,26 +218,42 @@ cipherdata Ibe::encrypt(std::string id, std::string msg){
 
 void Ibe::decrypt(idpk p, cipherdata data){
 	using namespace nlohmann;
-	// TODO: Figure out why the computation of the points is 
+	// TODO: Figure out why the computation of the points are
 	// fucking off.
 	
 	std::cout << "DECRYPTING" << std::endl;
 	fp12e_t point;
 	// rp should be equal to curvepoint
 	pair(point, data.rp, p.d);
-	std::cout << "THE PAIR IS NOT FUCKED UP" << std::endl;
 
 	/*FILE *fptr;
 	fptr = fopen("/home/professor/Documents/Projects/crypto/fpDEC.txt","a+");
 	fp12e_print(fptr,point);*/
-	std::cout << "THE MARSHAL PRINT SHIT WORKS" << std::endl;
 
 	auto q = Marshal(p.q);      // Fixed runtime errors
 	auto rp = Marshal(data.rp); // Fixed runtime errors
-	auto d = Marshal(point);
-	std::cout << "THE MARSHAL SHIT WORKS" << std::endl;
+	auto d = Marshal(point);	// Fixed runtime errors
+	
+
+	std::cout << "THIS IS D start" << std::endl;
+	for(unsigned char x : d){
+		std::cout << x;
+	}
+	std::cout << std::endl;
+	std::cout << "THIS IS D END" << std::endl;
+
 	//curvepoint_fp_print(fptr,rp);
 	//fp12e_print(fptr,er);
+
+	if(testp1 != q){
+		std::cerr << "They are not equal 1" << std::endl;
+	}
+	if(testp2 != rp){
+		std::cerr << "They are not equal 2" << std::endl;
+	}
+	if(testp3 != d){
+		std::cerr << "They are not equal 3" << std::endl;
+	}
 
 	std::vector<unsigned char> xtt;
 	xtt.insert(xtt.end(), q.begin(), q.end());
@@ -271,7 +308,6 @@ std::vector<unsigned char> Marshal(fp12e_t point){
 		//memcpy(out + (i*NUM_BYTES*2), b, sizeof(b));
 		i++;
 	}
-	std::cout << "COMPLETED SUCSESSFULLY FP12e" << std::endl;
 	return out;
 }
 
@@ -307,16 +343,13 @@ std::vector<unsigned char> Marshal(curvepoint_fp_t point){
 	fpe_t x, y;
 	
 	GetXY(x, y, point);
-	std::cout << "The GET FUNCTION WORKS" << std::endl;
 	auto tmp = Marshal(x);
 	auto tmp2 = Marshal(y);
-	std::cout << "MARSHAL FPE WORKS" << std::endl;
 
 	std::copy(tmp.begin(), tmp.end(), out.begin());
 	std::copy(tmp2.begin(), tmp2.end(), out.begin() + NUM_BYTES);
 	//memcpy(out, tmp, sizeof(tmp));
 	//memcpy(out + NUM_BYTES, y, sizeof(y));
-	std::cout << "COMPLETED SUCSESSFULLY CURVEPOINT" << std::endl;
 	return out;
 }
 
@@ -342,16 +375,13 @@ std::vector<unsigned char> Marshal(fpe_t point){
 
 std::vector<unsigned char> Marshal(twistpoint_fp2_t point){
 	//auto out = (unsigned char*) malloc((NUM_BYTES * 4) * sizeof(unsigned char));
-	std::cout << " MARSHAL TWSITPOINT STARTED" << std::endl;
 	std::vector<unsigned char> out(NUM_BYTES * 4); 
 	fp2e_t x, y;
 	GetXY(x,y,point);
-	std::cout << "GETXY COMPLETED" << std::endl;
 
 	// TODO: Fix the Marshall fp2e function
 	auto serix = Marshal(x);
 	auto seriy = Marshal(y);
-	std::cout << "MARSHAL FP2E passed" << std::endl;
 
 	/*memcpy(out, serix, sizeof(serix));
 	memcpy((out + (NUM_BYTES*2)),seriy, sizeof(seriy));
@@ -360,7 +390,6 @@ std::vector<unsigned char> Marshal(twistpoint_fp2_t point){
 
 	std::copy(serix.begin(), serix.end(), out.begin());
 	std::copy(seriy.begin(), seriy.end(), out.begin() + (NUM_BYTES*2));
-	std::cout << "COMPLETED SUCSESSFULLY TWSITPOINT" << std::endl;
 	return out;
 }
 
