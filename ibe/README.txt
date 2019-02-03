@@ -28,6 +28,3 @@ Test the code:
 I use gtest to test the code. I have write a Makefile for testing code. Before run
 the test, please comment the main function in the corresponding target file in 
 order to make the test work.
-
--------------------------------------------------------------------------------------
-Ran Zhao <ran.zhao@yale.edu>

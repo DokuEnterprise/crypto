@@ -3,6 +3,7 @@
 *.exe~
 *.dll
 *.so
+*.o
 *.dylib
 *.vscode
 
@@ -20,3 +21,4 @@ src/.release_time
 src/build
 src/bin
 *.o
+libssl.so.1.0.0

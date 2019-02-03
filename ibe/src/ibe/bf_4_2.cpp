@@ -1,7 +1,5 @@
 /*
  Boneh-Franklin Identity-Based Encryption from the Weil Pairing
- Author: Ran Zhao
- Created on: Oct 4th, 2012
  This file is the implementation of BasicIdent scheme of the IBE system.(Chapter 4.2)
  This code needs GMP and PBC library.
  
