@@ -13,7 +13,7 @@ See LICENSE for license
 #include "config.h"
 
 int decrypt(int argc, char **argv);
-int encrypt(int argc, char **argv);
+int encrypt_sibe(int argc, char **argv);
 int request(int argc, char **argv);
 int combine(int argc, char **argv);
 int imratio(int argc, char **argv);

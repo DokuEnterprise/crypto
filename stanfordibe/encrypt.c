@@ -14,7 +14,7 @@ See LICENSE for license
 #include "ibe_progs.h"
 #include "format.h"
 
-int encrypt(int argc, char **argv)
+int encrypt_sibe(int argc, char **argv)
 {
     char **idarray;
     int i;
