@@ -64,7 +64,7 @@ typedef struct config_ctx {
 
 /*---  Return codes  ---*/
 
-#define NOT_FOUND	-1
+#define FIND_FAILED	-1
 
 
 /*---  Function prototypes  ---*/
