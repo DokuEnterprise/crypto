@@ -74,7 +74,7 @@ PRIVATE int GetIndex(
     if ( strncmp(ctx->ConfigParam[i].type, look, MAX_NAMLEN) == 0)
       return i;
 
-  return NOT_FOUND;
+  return FIND_FAILED;
 }
 
 /*------------------------------------------------------------------------*/
