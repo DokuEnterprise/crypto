@@ -1,0 +1,1 @@
+g++ ibe.cpp -lgmp -lsodium -lmcl -lssl -lcrypto
