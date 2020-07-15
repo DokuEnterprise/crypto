@@ -2,7 +2,7 @@
 
 SSL_L=libssl.so.1.0.0
 INC1 = include
-INC2 = /usr/local/openssl-1.0
+INC2 = /usr/local/openssl-1.0/include
 #d =  -I$(INC2) -I$(INC1) -L$(SSL_L) -lssl -lcrypto -lgmp  -DNDEBUG -pipe -O3 -march=x86-64 -Wall -fomit-frame-pointer -ffast-math -funroll-loops -fPIC  -g # C flags
 
 CC = gcc
