@@ -9,7 +9,7 @@ CC = gcc
 
 CPPFLAGS= -I$(INC2) -I$(INC1) -fomit-frame-pointer -fPIC -DQHASM 
 LDFLAGS= -shared  -I$(INC2) -I$(INC1) -L$(SSL_L) -lgmp
-`
+
 SOURCES = $(shell echo *.c)
 HEADERS = $(shell echo include/*.h) 
 OBJECTS=$(SOURCES:.c=.o)
