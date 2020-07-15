@@ -1,15 +1,15 @@
 .PHONY : clean
 
-SSL_L=libssl.so.1.0.0
-INC1 = include
-INC2 = /usr/local/openssl-1.0/include
+SSL_L=/usr/local/openssl-1.0/lib64
+INC1 =include
+INC2 =/usr/local/openssl-1.0/include
 #d =  -I$(INC2) -I$(INC1) -L$(SSL_L) -lssl -lcrypto -lgmp  -DNDEBUG -pipe -O3 -march=x86-64 -Wall -fomit-frame-pointer -ffast-math -funroll-loops -fPIC  -g # C flags
 
 CC = gcc
 
-CPPFLAGS= -I$(INC2) -I$(INC1)  -fomit-frame-pointer -fPIC -DQHASM 
-LDFLAGS= -shared  -I$(INC2) -I$(INC1) -L$(SSL_L) -lcrypto -lssl -lgmp
-
+CPPFLAGS= -I$(INC2) -I$(INC1) -fomit-frame-pointer -fPIC -DQHASM 
+LDFLAGS= -shared  -I$(INC2) -I$(INC1) -L$(SSL_L) -lgmp
+`
 SOURCES = $(shell echo *.c)
 HEADERS = $(shell echo include/*.h) 
 OBJECTS=$(SOURCES:.c=.o)
